@@ -1,25 +1,24 @@
-import nodemailer from "nodemailer";
+import * as brevo from '@getbrevo/brevo';
 
 export const sendEmailOtp = async (email, otp) => {
   try {
+    const apiInstance = new brevo.TransactionalEmailsApi();
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+    apiInstance.setApiKey(
+      brevo.TransactionalEmailsApiApiKeys.apiKey,
+      process.env.BREVO_API_KEY
+    );
 
-    await transporter.verify();
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
 
-    const mailOptions = {
-      from: `"DoorDarshan Travels" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Your Door Darshan OTP Verification",
-      html: `
+    sendSmtpEmail.subject = "Your Door Darshan OTP Verification";
+    sendSmtpEmail.to = [{ email: email, name: "User" }];
+    sendSmtpEmail.sender = {
+      name: "DoorDarshan Cabs",
+      email: process.env.EMAIL_USER
+    };
+
+    sendSmtpEmail.htmlContent = `
   <div style="margin:0; padding:0; background:#f4f4f4; font-family:Arial, Helvetica, sans-serif;">
 
     <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; margin:auto;">
@@ -97,18 +96,15 @@ export const sendEmailOtp = async (email, otp) => {
     </table>
 
   </div>
-  `
-    };
+  `;
 
-    await transporter.sendMail(mailOptions);
-    console.log('Email sent:');
+    const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
     return true;
-  }
-  catch (error) {
-    console.error('Email error:', {
+
+  } catch (error) {
+    console.error('Brevo API error:', {
       message: error.message,
-      code: error.code,
-      response: error.response
+      response: error.response?.text || error.response?.body
     });
     throw error;
   }
