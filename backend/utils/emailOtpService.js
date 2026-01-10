@@ -9,7 +9,7 @@ export const sendEmailOtp = async (email, otp) => {
 
   const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
-    port: 587,
+    port: 465,
     secure: false,
     auth: {
       user: process.env.EMAIL_USER,
@@ -19,7 +19,6 @@ export const sendEmailOtp = async (email, otp) => {
     greetingTimeout: 10000,
     socketTimeout: 10000,
   });
-
 
   const mailOptions = {
     from: `"DoorDarshan Travels" <${process.env.EMAIL_USER}>`,
