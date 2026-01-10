@@ -2,6 +2,11 @@ import nodemailer from "nodemailer";
 
 export const sendEmailOtp = async (email, otp) => {
 
+  console.log("EMAIL ENV CHECK", {
+    user: !!process.env.EMAIL_USER,
+    pass: !!process.env.EMAIL_PASS,
+  });
+
   const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 587,
@@ -100,7 +105,6 @@ export const sendEmailOtp = async (email, otp) => {
   </div>
   `
   };
-
 
   await transporter.sendMail(mailOptions);
   return true;
