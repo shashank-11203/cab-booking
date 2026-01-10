@@ -6,6 +6,8 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      lowercase: true,
+      trim: true,
     },
     phone: {
       type: String,
@@ -42,8 +44,38 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    otp: {
+      type: String,
+      default: null,
+    },
+    otpExpiry: {
+      type: Date,
+      default: null,
+    },
+    unverifiedCreatedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
+
+userSchema.index(
+  { unverifiedCreatedAt: 1 },
+  { 
+    expireAfterSeconds: 86400,
+    partialFilterExpression: { isVerified: false } 
+  }
+);
+userSchema.methods.isOtpExpired = function() {
+  if (!this.otpExpiry) return true;
+  return Date.now() > this.otpExpiry;
+};
+
+userSchema.methods.clearOtp = function() {
+  this.otp = null;
+  this.otpExpiry = null;
+  return this.save();
+};
 
 export default mongoose.model("User", userSchema);

@@ -20,9 +20,30 @@ export const sendEmailOtpController = asyncHandler(async (req, res) => {
   }
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-  req.session.emailOtp = otp;
-  req.session.email = email;
+  let user = await User.findOne({ email: email.toLowerCase() });
+
+  if (!user) {
+    user = await User.create({
+      email: email.toLowerCase(),
+      otp: otp,
+      otpExpiry: otpExpiry,
+      isVerified: false,
+      role: "user",
+      unverifiedCreatedAt: new Date(),
+    });
+
+  } else {
+    user.otp = otp;
+    user.otpExpiry = otpExpiry;
+
+    if (!user.isVerified) {
+      user.unverifiedCreatedAt = new Date(); 
+    }
+
+    await user.save();
+  }
 
   await sendEmailOtp(email, otp);
 
@@ -39,24 +60,39 @@ export const verifyEmailOtpController = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: "Missing fields" });
   }
 
-  if (!req.session.emailOtp || !req.session.email)
-    return res.status(400).json({ success: false, message: "OTP expired" });
 
-  if (req.session.email !== email)
-    return res.status(400).json({ success: false, message: "Email mismatch" });
+  const user = await User.findOne({ email: email.toLowerCase() });
 
-  if (req.session.emailOtp !== otp)
-    return res.status(400).json({ success: false, message: "Invalid OTP" });
-
-  let user = await User.findOne({ email });
-
-  if (!user) {
-    user = await User.create({
-      email,
-      role,
-      isVerified: true,
+  if (!user || !user.otp) {
+    return res.status(400).json({
+      success: false,
+      message: "OTP expired or not found"
     });
   }
+
+  if (user.isOtpExpired()) {
+    await user.clearOtp();
+    return res.status(400).json({
+      success: false,
+      message: "OTP has expired. Please request a new one."
+    });
+  }
+
+  if (user.otp !== otp) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid OTP"
+    });
+  }
+
+  user.isVerified = true;
+
+  if (!user.role || user.role === "user") {
+    user.role = role;
+  }
+
+  user.unverifiedCreatedAt = null;
+  await user.clearOtp();
 
   const token = generateToken(user._id);
 
@@ -69,9 +105,6 @@ export const verifyEmailOtpController = asyncHandler(async (req, res) => {
     path: "/",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
-
-  req.session.emailOtp = null;
-  req.session.email = null;
 
   return res.status(200).json({
     success: true,
@@ -88,7 +121,6 @@ export const verifyEmailOtpController = asyncHandler(async (req, res) => {
     },
   });
 });
-
 
 export const updateProfileController = asyncHandler(async (req, res) => {
   try {
@@ -126,7 +158,7 @@ export const getMeController = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     success: true,
-    user: {  
+    user: {
       id: user._id,
       phone: user.phone,
       name: user.name || "",

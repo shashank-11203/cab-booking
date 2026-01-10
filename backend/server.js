@@ -103,6 +103,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import session from "express-session";
+import MongoStore from 'connect-mongo';
 
 import connectDB from "./config/db.js";
 import { sanitizeRequest } from "./middlewares/sanitizeMiddleware.js";
@@ -123,23 +124,25 @@ import cloudinaryRoutes from "./routes/cloudinaryRoutes.js";
 import carPublicRoutes from "./routes/carPublicRoutes.js";
 import corporateRideRoutes from "./routes/corporateRideRoutes.js";
 import adminCouponRoutes from "./routes/adminCouponRoutes.js";
+import mongoose from "mongoose";
 
 const app = express();
-
+await mongoose.connect(process.env.MONGO_URI);
+console.log('MongoDB Connected');
 // ✅ Trust proxy (MUST be first)
 app.set('trust proxy', 1);
 
 // ✅ Health check (BEFORE rate limiting and DB connection)
 app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'ok', 
+  res.status(200).json({
+    status: 'ok',
     uptime: process.uptime(),
-    env: process.env.NODE_ENV 
+    env: process.env.NODE_ENV
   });
 });
 
 // Connect DB
-connectDB();
+// connectDB();
 
 // Security & Performance
 app.use(helmet());
@@ -150,7 +153,7 @@ app.use(
   cors({
     origin: process.env.NODE_ENV === 'production'
       ? process.env.FRONTEND_URL
-      : ['http://localhost:5173', 'http://localhost:3000'],
+      : ['http://localhost:5173'],
     credentials: true,
   })
 );
@@ -165,14 +168,21 @@ app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: process.env.NODE_ENV !== 'production',
+    saveUninitialized: false,
+    store: MongoStore.create({
+      client: mongoose.connection.getClient(),
+      ttl: 5 * 60,
+      touchAfter: 24 * 3600,
+      crypto: {
+        secret: process.env.SESSION_SECRET
+      }
+    }),
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-      maxAge: process.env.NODE_ENV === 'production' ? 24 * 60 * 60 * 1000 : 5 * 60 * 1000,
-    },
-    proxy: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 5 * 60 * 1000
+    }
   })
 );
 
