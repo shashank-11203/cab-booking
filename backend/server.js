@@ -29,6 +29,7 @@ import corporateRideRoutes from "./routes/corporateRideRoutes.js";
 import adminCouponRoutes from "./routes/adminCouponRoutes.js";
 
 const app = express();
+app.set('trust proxy', 1);
 connectDB();
 
 app.use(helmet());
