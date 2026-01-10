@@ -110,8 +110,10 @@ const Login = ({ role = "user" }) => {
           }
 
           if (data.user.role !== "corporate") {
+            login(data.user);
             toast.info("Request corporate access to continue.");
-            return navigate("/profile?redirectTo=corporate-request");
+            navigate("/corporate-request");
+            return;
           }
         }
 
