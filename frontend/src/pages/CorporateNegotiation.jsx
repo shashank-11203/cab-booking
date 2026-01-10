@@ -9,7 +9,8 @@ export default function CorporateNegotiation() {
   const { user } = useAuth();
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
   }, []);
 
   useEffect(() => {

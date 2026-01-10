@@ -37,7 +37,6 @@ export default function AdminRides() {
 
   useEffect(() => {
     let intervalId = null;
-    let isMounted = true;
 
     async function fetchAndFilter(showLoader = false) {
       try {
@@ -46,35 +45,57 @@ export default function AdminRides() {
         const res = await apiClient.get("/api/v1/admin/rides");
         const all = res.data.rides || [];
 
-        if (!isMounted) return;
+        console.log(`📡 Polling: Fetched ${all.length} rides`);
 
+        // Update allRides
         setAllRides(all);
 
         const currentFilter = filterRef.current;
 
+        // Filter based on current filter and RECALCULATE status
+        let filtered = [];
+
         if (currentFilter === "all") {
-          setRides(all);
+          filtered = all;
         } else if (currentFilter === "active") {
-          setRides(all.filter(r => getRideDisplayStatus(r) === "active"));
+          // ✅ Recalculate display status for each ride
+          filtered = all.filter(ride => {
+            const displayStatus = getRideDisplayStatus(ride);
+            console.log(`Ride ${ride._id}: ${displayStatus}`);
+            return displayStatus === "active";
+          });
+          console.log(`✅ Active rides: ${filtered.length}`);
+        } else if (currentFilter === "upcoming") {
+          filtered = all.filter(ride => {
+            const displayStatus = getRideDisplayStatus(ride);
+            return displayStatus === "upcoming";
+          });
         } else {
-          setRides(all.filter(r => r.rideStatus === currentFilter));
+          // For other filters (completed, cancelled, etc.)
+          filtered = all.filter(r => r.rideStatus === currentFilter);
         }
+
+        setRides(filtered);
       } catch (err) {
-        console.error("Admin rides polling error:", err);
+        console.error("❌ Admin rides polling error:", err);
       } finally {
         if (showLoader) setLoading(false);
       }
     }
 
-    function startPolling(initial = false) {
-      if (intervalId) return;
+    function startPolling() {
+      if (intervalId) {
+        console.log("⚠️ Polling already running");
+        return;
+      }
 
-      fetchAndFilter(initial);
-      intervalId = setInterval(fetchAndFilter, 15000);
+      fetchAndFilter(false);
+      intervalId = setInterval(() => fetchAndFilter(false), 15000);
     }
 
     function stopPolling() {
       if (intervalId) {
+        console.log("⏸️ Stopping polling");
         clearInterval(intervalId);
         intervalId = null;
       }
@@ -82,20 +103,21 @@ export default function AdminRides() {
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        startPolling(true);
+        console.log("👁️ Tab visible - starting polling");
+        startPolling();
       } else {
+        console.log("🙈 Tab hidden - stopping polling");
         stopPolling();
       }
     };
 
     if (document.visibilityState === "visible") {
-      startPolling(true);
+      startPolling();
     }
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      isMounted = false;
       stopPolling();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
@@ -107,17 +129,24 @@ export default function AdminRides() {
 
       const res = await apiClient.get("/api/v1/admin/rides");
       const all = res.data.rides || [];
+
       setAllRides(all);
 
+      let filtered = [];
+
       if (filter === "all") {
-        setRides(all);
+        filtered = all;
       } else if (filter === "active") {
-        setRides(all.filter(r => getRideDisplayStatus(r) === "active"));
+        filtered = all.filter(ride => getRideDisplayStatus(ride) === "active");
+      } else if (filter === "upcoming") {
+        filtered = all.filter(ride => getRideDisplayStatus(ride) === "upcoming");
       } else {
-        setRides(all.filter(r => r.rideStatus === filter));
+        filtered = all.filter(r => r.rideStatus === filter);
       }
+
+      setRides(filtered);
     } catch (err) {
-      console.error("fetchRides error", err);
+      console.error("❌ fetchRides error:", err);
     } finally {
       if (showLoading) setLoading(false);
     }
@@ -296,8 +325,8 @@ export default function AdminRides() {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setFilter(btn.value)}
                 className={`px-4 sm:px-6 py-2.5 rounded-lg font-medium text-sm sm:text-base transition-all duration-200 ${filter === btn.value
-                    ? "bg-yellow-400 text-black shadow-md"
-                    : "bg-white [[data-theme=dark]_&]:bg-gray-800 text-gray-700 [[data-theme=dark]_&]:text-gray-300 border border-gray-200 [[data-theme=dark]_&]:border-gray-700 hover:border-yellow-400"
+                  ? "bg-yellow-400 text-black shadow-md"
+                  : "bg-white [[data-theme=dark]_&]:bg-gray-800 text-gray-700 [[data-theme=dark]_&]:text-gray-300 border border-gray-200 [[data-theme=dark]_&]:border-gray-700 hover:border-yellow-400"
                   }`}
               >
                 {btn.label}
@@ -353,12 +382,12 @@ export default function AdminRides() {
                 >
                   <div
                     className={`absolute top-0 left-0 right-0 h-1 ${displayStatus === "active"
-                        ? "bg-green-500"
-                        : displayStatus === "upcoming"
-                          ? "bg-blue-500"
-                          : displayStatus === "completed"
-                            ? "bg-gray-500"
-                            : "bg-red-500"
+                      ? "bg-green-500"
+                      : displayStatus === "upcoming"
+                        ? "bg-blue-500"
+                        : displayStatus === "completed"
+                          ? "bg-gray-500"
+                          : "bg-red-500"
                       }`}
                   />
 

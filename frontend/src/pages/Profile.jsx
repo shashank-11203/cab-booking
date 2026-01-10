@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
 import { updateProfileApi } from "../utils/authApiClient";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { getMe } from "../utils/authApiClient";
 
 const Profile = () => {
@@ -112,6 +112,12 @@ const Profile = () => {
               <p className="mt-2 px-3 py-1 bg-yellow-100 text-blue-700 rounded-full text-xs sm:text-sm inline-block">
                 Corporate User
               </p>
+            )}
+
+            {user?.role === "admin" && (
+              <Link to="/admin/cars" className="mt-2 px-3 py-1 bg-yellow-100 text-blue-500 rounded-full text-xs sm:text-sm inline-block">
+                Admin
+              </Link>
             )}
           </div>
         </div>

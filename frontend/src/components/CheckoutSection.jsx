@@ -141,7 +141,9 @@ const CheckoutSection = ({ tripData, car }) => {
                     },
                 });
 
-                toast.info("Please contact admin for final pricing.");
+                setTimeout(() => {
+                    toast.info("Please contact admin for final pricing.");
+                }, 500);
                 return navigate("/corporate-negotiation");
             }
 
@@ -193,7 +195,7 @@ const CheckoutSection = ({ tripData, car }) => {
                 description: "Ride Payment",
                 order_id: order.id,
                 handler: async response => {
-                    
+
                     const verifyRes = await verifyPaymentApi({
                         ...response,
                         userId,
@@ -220,7 +222,6 @@ const CheckoutSection = ({ tripData, car }) => {
             razor.open();
             toast.success("Redirecting to payment...");
         } catch (err) {
-            console.error("❌ PAYMENT ERROR:", err);
             toast.error("Payment Failed");
             setIsPaying(false);
         }
@@ -320,8 +321,8 @@ const CheckoutSection = ({ tripData, car }) => {
                         onClick={applyCoupon}
                         disabled={applyingCoupon || couponData !== null}
                         className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base whitespace-nowrap
-                            ${couponData !== null 
-                                ? 'bg-green-500 text-white cursor-default' 
+                            ${couponData !== null
+                                ? 'bg-green-500 text-white cursor-default'
                                 : 'bg-gray-200 hover:bg-gray-300 text-black'
                             }`}
                     >
@@ -331,40 +332,39 @@ const CheckoutSection = ({ tripData, car }) => {
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
-                <input 
-                    className="checkout-input text-sm sm:text-base" 
-                    placeholder="Full Name" 
-                    value={fullName} 
-                    onChange={e => setFullName(e.target.value)} 
+                <input
+                    className="checkout-input text-sm sm:text-base"
+                    placeholder="Full Name"
+                    value={fullName}
+                    onChange={e => setFullName(e.target.value)}
                 />
-                <input 
-                    className="checkout-input text-sm sm:text-base" 
-                    placeholder="Phone Number" 
-                    value={phone} 
-                    onChange={e => setPhone(e.target.value)} 
+                <input
+                    className="checkout-input text-sm sm:text-base"
+                    placeholder="Phone Number"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
                 />
-                <input 
-                    className="checkout-input text-sm sm:text-base" 
-                    placeholder="Email" 
-                    value={email} 
-                    onChange={e => setEmail(e.target.value)} 
+                <input
+                    className="checkout-input text-sm sm:text-base"
+                    placeholder="Email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
                 />
-                <input 
-                    type="number" 
-                    className="checkout-input text-sm sm:text-base" 
-                    min="1" 
-                    placeholder="Passengers" 
-                    value={passengers} 
-                    onChange={e => setPassengers(e.target.value)} 
+                <input
+                    type="number"
+                    className="checkout-input text-sm sm:text-base"
+                    min="1"
+                    placeholder="Passengers"
+                    value={passengers}
+                    onChange={e => setPassengers(e.target.value)}
                 />
             </div>
 
             <button
                 onClick={handlePayment}
                 disabled={isPaying}
-                className={`mt-6 sm:mt-7 md:mt-8 w-full py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-base sm:text-lg ${
-                    isPaying ? "bg-gray-400 cursor-not-allowed" : "bg-yellow-400 hover:bg-yellow-500"
-                }`}
+                className={`mt-6 sm:mt-7 md:mt-8 w-full py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-base sm:text-lg ${isPaying ? "bg-gray-400 cursor-not-allowed" : "bg-yellow-400 hover:bg-yellow-500"
+                    }`}
             >
                 {isPaying ? "Processing..." : "Proceed to Pay"}
             </button>

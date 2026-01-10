@@ -24,6 +24,7 @@ export default function AdminCoupons() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCoupon, setEditingCoupon] = useState(null);
+    const [submitting, setSubmitting] = useState(false);
 
     const [isRidesModalOpen, setIsRidesModalOpen] = useState(false);
     const [selectedCouponCode, setSelectedCouponCode] = useState(null);
@@ -37,17 +38,19 @@ export default function AdminCoupons() {
         isActive: true,
     });
 
+    useEffect(() => {
+        fetchCoupons(true);
+    }, []);
 
     useEffect(() => {
         let intervalId = null;
 
         const startPolling = () => {
-            if (intervalId) return; 
+            if (intervalId) return;
 
-            fetchCoupons(true); 
             intervalId = setInterval(() => {
                 fetchCoupons(false);
-            }, 30000);
+            }, 60000);
         };
 
         const stopPolling = () => {
@@ -59,6 +62,7 @@ export default function AdminCoupons() {
 
         const handleVisibilityChange = () => {
             if (document.visibilityState === "visible") {
+                fetchCoupons(false);
                 startPolling();
             } else {
                 stopPolling();
@@ -77,16 +81,20 @@ export default function AdminCoupons() {
         };
     }, []);
 
-    async function fetchCoupons() {
+    async function fetchCoupons(showLoader = false) {
         try {
-            setLoading(true);
+            if (showLoader) setLoading(true);
+
             const res = await apiClient.get("/api/v1/admin/coupons");
             setCoupons(res.data.coupons || []);
-            console.log("Fetched coupons:", res.data.coupons);
+
+            if (!showLoader) {
+                console.log("🔄 Coupons refreshed silently");
+            }
         } catch (err) {
-            console.error("Fetch coupons error", err);
+            console.error("❌ Fetch coupons error:", err);
         } finally {
-            setLoading(false);
+            if (showLoader) setLoading(false);
         }
     }
 
@@ -109,6 +117,14 @@ export default function AdminCoupons() {
         const ampm = h >= 12 ? "PM" : "AM";
         const h12 = h % 12 || 12;
         return `${h12}:${mn} ${ampm}`;
+    };
+
+    const formatDate = dateStr => {
+        const d = new Date(dateStr);
+        const day = String(d.getDate()).padStart(2, "0");
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const year = d.getFullYear();
+        return `${day}/${month}/${year}`;
     };
 
     function openRidesModal(code) {
@@ -134,13 +150,11 @@ export default function AdminCoupons() {
         setForm({
             name: coupon.name,
             code: coupon.code,
-            expiresAt: coupon.expiresAt?.slice(0, 10),
+            expiresAt: coupon.expiresAt ? coupon.expiresAt.slice(0, 10) : "",
             isActive: coupon.isActive,
         });
         setIsModalOpen(true);
     }
-
-
 
     function generateCode() {
         const base = form.name
@@ -157,15 +171,20 @@ export default function AdminCoupons() {
     async function handleSubmit(e) {
         e.preventDefault();
 
+        if (submitting) return;
+
         try {
+            setSubmitting(true);
+
             const payload = {
                 name: form.name.trim(),
                 code: form.code.trim().toUpperCase(),
                 isActive: form.isActive,
-                expiresAt: form.expiresAt
-                    ? new Date(form.expiresAt).toISOString()
-                    : null,
             };
+
+            if (form.expiresAt) {
+                payload.expiresAt = new Date(form.expiresAt).toISOString();
+            }
 
             if (editingCoupon) {
                 await apiClient.put(
@@ -177,10 +196,12 @@ export default function AdminCoupons() {
             }
 
             setIsModalOpen(false);
-            fetchCoupons();
+            fetchCoupons(true);
         } catch (err) {
-            console.error("Save coupon error", err);
-            alert("Failed to save coupon");
+            console.error("❌ Save coupon error:", err);
+            alert(err.response?.data?.message || "Failed to save coupon");
+        } finally {
+            setSubmitting(false);
         }
     }
 
@@ -189,7 +210,7 @@ export default function AdminCoupons() {
 
         try {
             await apiClient.delete(`/api/v1/admin/coupons/${id}`);
-            fetchCoupons();
+            fetchCoupons(true);
         } catch (err) {
             console.error("Delete coupon error", err);
         }
@@ -273,7 +294,7 @@ export default function AdminCoupons() {
                                         <p className="flex items-center gap-2">
                                             <Calendar size={14} className="text-blue-500" />
                                             {coupon.expiresAt
-                                                ? new Date(coupon.expiresAt).toLocaleDateString()
+                                                ? formatDate(new Date(coupon.expiresAt).toLocaleDateString())
                                                 : "No expiry"}
                                         </p>
                                         <p className="flex items-center gap-2">
@@ -361,6 +382,7 @@ export default function AdminCoupons() {
                                         value={form.name}
                                         onChange={e => setForm({ ...form, name: e.target.value })}
                                         required
+                                        disabled={submitting}
                                     />
                                 </div>
 
@@ -377,11 +399,13 @@ export default function AdminCoupons() {
                                                 setForm({ ...form, code: e.target.value.toUpperCase() })
                                             }
                                             required
+                                            disabled={submitting}
                                         />
                                         <button
                                             type="button"
                                             onClick={generateCode}
-                                            className="px-3 sm:px-4 py-2 rounded-lg font-semibold bg-gray-200 hover:bg-gray-300 [[data-theme=dark]_&]:bg-gray-700 [[data-theme=dark]_&]:hover:bg-gray-600 text-gray-900 [[data-theme=dark]_&]:text-white transition-colors"
+                                            disabled={submitting}
+                                            className="px-3 sm:px-4 py-2 rounded-lg font-semibold bg-gray-200 hover:bg-gray-300 [[data-theme=dark]_&]:bg-gray-700 [[data-theme=dark]_&]:hover:bg-gray-600 text-gray-900 [[data-theme=dark]_&]:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                             title="Generate Code"
                                         >
                                             <Tag size={16} />
@@ -403,6 +427,8 @@ export default function AdminCoupons() {
                                         onChange={e =>
                                             setForm({ ...form, expiresAt: e.target.value })
                                         }
+                                        disabled={submitting}
+                                        min={new Date().toISOString().split('T')[0]} 
                                     />
                                 </div>
 
@@ -413,6 +439,7 @@ export default function AdminCoupons() {
                                         onChange={e =>
                                             setForm({ ...form, isActive: e.target.checked })
                                         }
+                                        disabled={submitting}
                                         className="w-4 h-4"
                                     />
                                     Coupon is active
@@ -421,9 +448,20 @@ export default function AdminCoupons() {
 
                             <button
                                 type="submit"
-                                className="mt-5 sm:mt-6 w-full py-2.5 sm:py-3 rounded-xl font-semibold bg-yellow-400 hover:bg-yellow-500 text-black transition-colors text-sm sm:text-base"
+                                disabled={submitting} // ✅ Disable when submitting
+                                className="mt-5 sm:mt-6 w-full py-2.5 sm:py-3 rounded-xl font-semibold bg-yellow-400 hover:bg-yellow-500 text-black transition-colors text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {editingCoupon ? "Update Coupon" : "Create Coupon"}
+                                {submitting ? (
+                                    <span className="flex items-center justify-center gap-2">
+                                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                        </svg>
+                                        {editingCoupon ? "Updating..." : "Creating..."}
+                                    </span>
+                                ) : (
+                                    editingCoupon ? "Update Coupon" : "Create Coupon"
+                                )}
                             </button>
                         </motion.form>
                     </motion.div>

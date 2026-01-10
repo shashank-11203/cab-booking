@@ -220,7 +220,6 @@ export const toggleCarActive = async (req, res) => {
   }
 };
 
-// adminCarControllers.js
 export const updateCar = async (req, res) => {
   try {
     const carId = req.params.id;

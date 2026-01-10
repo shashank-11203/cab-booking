@@ -4,27 +4,52 @@ import CorporateRide from "../models/CorporateRides.js";
 
 export const createCoupon = async (req, res) => {
     try {
-        const { name, code } = req.body;
+        const { name, code, expiresAt, isActive } = req.body;
 
         const discount = parseInt(code.slice(-2));
         if (isNaN(discount) || discount < 1 || discount > 99) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid coupon code format",
+                message: "Invalid coupon code format. Last 2 digits must be 01-99",
             });
         }
 
-        const coupon = await Coupon.create({
-            name,
-            code,
+        const existingCoupon = await Coupon.findOne({ code: code.toUpperCase() });
+        if (existingCoupon) {
+            return res.status(400).json({
+                success: false,
+                message: "Coupon code already exists",
+            });
+        }
+
+        const couponData = {
+            name: name.trim(),
+            code: code.toUpperCase().trim(),
             discountPercent: discount,
+            isActive: isActive !== undefined ? isActive : true,
             createdBy: req.user._id,
-        });
+        };
+
+        if (expiresAt) {
+            couponData.expiresAt = new Date(expiresAt);
+           
+            if (couponData.expiresAt <= new Date()) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Expiry date must be in the future",
+                });
+            }
+        }
+
+        const coupon = await Coupon.create(couponData);
 
         res.json({ success: true, coupon });
     } catch (err) {
-        console.error("create coupon error", err);
-        res.status(500).json({ success: false });
+        console.error("Create coupon error:", err);
+        res.status(500).json({ 
+            success: false,
+            message: err.message || "Failed to create coupon"
+        });
     }
 };
 
@@ -58,16 +83,77 @@ export const getAllCoupons = async (req, res) => {
 
 export const updateCoupon = async (req, res) => {
     try {
-        const coupon = await Coupon.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            { new: true }
-        );
+        const { id } = req.params;
+        const { name, code, expiresAt, isActive } = req.body;
+
+        const coupon = await Coupon.findById(id);
+
+        if (!coupon) {
+            return res.status(404).json({
+                success: false,
+                message: "Coupon not found",
+            });
+        }
+
+        if (code && code !== coupon.code) {
+            const discount = parseInt(code.slice(-2));
+            if (isNaN(discount) || discount < 1 || discount > 99) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid coupon code format. Last 2 digits must be 01-99",
+                });
+            }
+
+            const existingCoupon = await Coupon.findOne({ 
+                code: code.toUpperCase(),
+                _id: { $ne: id } 
+            });
+            
+            if (existingCoupon) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Coupon code already exists",
+                });
+            }
+
+            coupon.code = code.toUpperCase().trim();
+            coupon.discountPercent = discount;
+        }
+
+        if (name !== undefined) {
+            coupon.name = name.trim();
+        }
+
+        if (isActive !== undefined) {
+            coupon.isActive = isActive;
+        }
+
+        if (expiresAt !== undefined) {
+            if (expiresAt === null || expiresAt === "") {
+                coupon.expiresAt = null;
+            } else {
+                const expiryDate = new Date(expiresAt);
+                
+                if (expiryDate <= new Date()) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Expiry date must be in the future",
+                    });
+                }
+                
+                coupon.expiresAt = expiryDate;
+            }
+        }
+
+        await coupon.save();
 
         res.json({ success: true, coupon });
     } catch (err) {
-        console.error("update coupon error", err);
-        res.status(500).json({ success: false });
+        console.error("Update coupon error:", err);
+        res.status(500).json({ 
+            success: false,
+            message: err.message || "Failed to update coupon"
+        });
     }
 };
 
