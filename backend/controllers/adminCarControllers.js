@@ -1,6 +1,7 @@
 import Car from "../models/Car.js";
 import Ride from "../models/Ride.js";
 import CorporateRide from "../models/CorporateRides.js";
+import { updateRideStatuses } from "../utils/rideStatusUpdater.js";
 
 /* -----------------------------------------------------------
    GET ALL CARS
@@ -112,6 +113,8 @@ export const deleteCar = async (req, res) => {
 
 export const checkAvailability = async (req, res) => {
   try {
+    await updateRideStatuses();
+
     const cars = await Car.find({});
 
     const [normalRides, corporateRides] = await Promise.all([

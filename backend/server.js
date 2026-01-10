@@ -27,7 +27,6 @@ import cloudinaryRoutes from "./routes/cloudinaryRoutes.js";
 import carPublicRoutes from "./routes/carPublicRoutes.js";
 import corporateRideRoutes from "./routes/corporateRideRoutes.js";
 import adminCouponRoutes from "./routes/adminCouponRoutes.js";
-import { startRideStatusUpdater } from "./utils/rideStatusUpdater.js";
 
 const app = express();
 connectDB();
@@ -79,7 +78,7 @@ app.use("/api/v1/cars", carPublicRoutes);
 app.use("/api/v1/corporate", corporateRideRoutes);
 app.use("/api/v1/admin/coupons", adminCouponRoutes);
 
-startRideStatusUpdater();
+// startRideStatusUpdater();
 
 app.use(notFound);
 app.use(errorHandler);

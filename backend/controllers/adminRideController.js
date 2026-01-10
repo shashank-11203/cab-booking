@@ -51,8 +51,12 @@ import { createPaymentRecord } from "../utils/paymentHelper.js";
 /* -----------------------------------------------------------
    GET RIDES
 ------------------------------------------------------------ */
+import { updateRideStatuses } from "../utils/rideStatusUpdater.js";
+
 export const getAdminRides = async (req, res) => {
   try {
+    await updateRideStatuses();
+
     const normalRides = await Ride.find({})
       .populate("userId", "name email phone role")
       .lean();
@@ -346,9 +350,9 @@ export const generateExtraChargePaymentLink = async (req, res) => {
     });
   } catch (err) {
     console.error("generate extra charge error:", err);
-    return res.status(500).json({ 
+    return res.status(500).json({
       success: false,
-      message: err.message 
+      message: err.message
     });
   }
 };

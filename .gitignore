@@ -32,3 +32,4 @@ Thumbs.db
 # ===== IDE Config =====
 .vscode/
 .idea/
+db.txt
