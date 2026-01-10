@@ -61,68 +61,104 @@ export default function AdminCars() {
     return `${formatDate(dateStr)}, ${formatTime(timeStr)}`;
   };
 
+  // Fetch cars initially and when filter changes
   useEffect(() => {
-    let isMounted = true;
+    fetchCars();
+  }, [filter, refreshKey]);
+
+  // Polling for availability updates (only when tab is active)
+  useEffect(() => {
     let intervalId = null;
 
     const fetchAvailability = async () => {
       try {
         const res = await apiClient.get("/api/v1/admin/cars/availability");
-        if (!res.data?.success) return;
 
-        const updates = res.data.availability;
+        if (res.data?.success && res.data.availability) {
+          const updates = res.data.availability;
 
-        if (isMounted) {
+          // Update cars with new availability
           setCars(prev =>
-            prev.map(car => ({
-              ...car,
-              availability: updates[car.carId] ?? car.availability,
-            }))
+            prev.map(car => {
+              const newAvailability = updates[car._id] ?? updates[car.carId];
+
+              // Only update if availability actually changed
+              if (newAvailability !== undefined && newAvailability !== car.availability) {
+                console.log(`Car ${car.name} availability changed: ${car.availability} → ${newAvailability}`);
+                return { ...car, availability: newAvailability };
+              }
+
+              return car;
+            })
           );
         }
       } catch (err) {
-        console.error("Availability update error", err);
+        console.error("Availability update error:", err);
       }
     };
 
     const startPolling = () => {
-      if (intervalId) return;
+      // Clear any existing interval
+      if (intervalId) clearInterval(intervalId);
 
+      // Fetch immediately
       fetchAvailability();
+
+      // Then poll every 60 seconds
       intervalId = setInterval(fetchAvailability, 60000);
+      console.log("✅ Polling started");
     };
 
     const stopPolling = () => {
       if (intervalId) {
         clearInterval(intervalId);
         intervalId = null;
+        console.log("⏸️ Polling stopped");
       }
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
+        console.log("👁️ Tab visible - starting polling");
         startPolling();
       } else {
+        console.log("🙈 Tab hidden - stopping polling");
         stopPolling();
       }
     };
 
+    // Start polling if tab is currently visible
     if (document.visibilityState === "visible") {
       startPolling();
     }
 
+    // Listen for tab visibility changes
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
+    // Cleanup on unmount
     return () => {
-      isMounted = false;
       stopPolling();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
+  }, [cars.length]); // Re-run if cars array changes
 
-  useEffect(() => {
-    fetchCars();
-  }, [filter, refreshKey]);
+  async function fetchCars() {
+    try {
+      setLoading(true);
+      const res = await apiClient.get("/api/v1/admin/cars", {
+        params: { category: filter === "all" ? undefined : filter },
+      });
+
+      const carsWithAvail = res.data.cars || [];
+      console.log("📦 Fetched cars:", carsWithAvail.length);
+      setCars(carsWithAvail);
+    } catch (err) {
+      console.error("fetchCars error:", err);
+      setCars([]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function fetchCars() {
     try {
@@ -483,7 +519,7 @@ export default function AdminCars() {
                         <button
                           onClick={() => {
                             setModalMode("edit");
-                            setSelectedCar(car); 
+                            setSelectedCar(car);
                             setIsCarModalOpen(true);
                           }}
                           className="px-4 py-2 text-sm rounded-lg bg-blue-500 hover:bg-blue-600 text-white"
