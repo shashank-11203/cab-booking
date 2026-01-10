@@ -62,6 +62,9 @@ app.use(
     max: 350,
   })
 );
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', uptime: process.uptime() });
+});
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
