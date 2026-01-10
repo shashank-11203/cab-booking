@@ -1,30 +1,25 @@
 import nodemailer from "nodemailer";
 
 export const sendEmailOtp = async (email, otp) => {
+  try {
 
-  console.log("EMAIL ENV CHECK", {
-    user: !!process.env.EMAIL_USER,
-    pass: !!process.env.EMAIL_PASS,
-  });
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
 
-  const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: false,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
-  });
+    await transporter.verify();
 
-  const mailOptions = {
-    from: `"DoorDarshan Travels" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: "Your Door Darshan OTP Verification",
-    html: `
+    const mailOptions = {
+      from: `"DoorDarshan Travels" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Your Door Darshan OTP Verification",
+      html: `
   <div style="margin:0; padding:0; background:#f4f4f4; font-family:Arial, Helvetica, sans-serif;">
 
     <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; margin:auto;">
@@ -103,8 +98,18 @@ export const sendEmailOtp = async (email, otp) => {
 
   </div>
   `
-  };
+    };
 
-  await transporter.sendMail(mailOptions);
-  return true;
+    await transporter.sendMail(mailOptions);
+    console.log('Email sent:');
+    return true;
+  }
+  catch (error) {
+    console.error('Email error:', {
+      message: error.message,
+      code: error.code,
+      response: error.response
+    });
+    throw error;
+  }
 };
