@@ -8,7 +8,9 @@ export const generateInvoice = async (req, res) => {
     const { rideId } = req.params;
 
     const ride = await Ride.findById(rideId).lean();
-    if (!ride) return res.status(404).json({ success: false, message: "Ride not found" });
+    if (!ride) {
+      return res.status(404).json({ success: false, message: "Ride not found" });
+    }
 
     const user = await User.findById(ride.userId).lean();
 
@@ -22,11 +24,10 @@ export const generateInvoice = async (req, res) => {
 
     doc.pipe(res);
 
-    // HEADER
-    doc
-      .fontSize(22)
-      .fillColor("#000")
-      .text("Durdarshan Travels");
+    /* =========================
+       HEADER
+    ========================= */
+    doc.fontSize(22).fillColor("#000").text("Durdarshan Travels");
 
     doc
       .fontSize(10)
@@ -41,70 +42,81 @@ export const generateInvoice = async (req, res) => {
       .fillColor("#666")
       .text(`Invoice ID: ${rideId}`)
       .text(`Invoice Date: ${moment().format("DD MMM YYYY, h:mm A")}`)
-      .moveDown(1);
+      .moveDown();
 
-    // Divider
-    doc
-      .moveTo(50, doc.y)
-      .lineTo(550, doc.y)
-      .strokeColor("#ccc")
-      .stroke()
-      .moveDown(1);
+    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke("#ccc").moveDown();
 
+    /* =========================
+       CUSTOMER DETAILS
+    ========================= */
     doc.fontSize(14).fillColor("#000").text("Customer Details", { underline: true }).moveDown(0.5);
-
     doc.fontSize(12).fillColor("#333");
-    doc.text(`Name: ${user?.name}`);
-    doc.text(`Email: ${user?.email}`);
-    doc.text(`Phone: ${user?.phone}`);
+    doc.text(`Name: ${user?.name || "-"}`);
+    doc.text(`Email: ${user?.email || "-"}`);
+    doc.text(`Phone: ${user?.phone || "-"}`);
 
-    doc.moveDown(1);
+    doc.moveDown();
+    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke("#ccc").moveDown();
 
-    doc
-      .moveTo(50, doc.y)
-      .lineTo(550, doc.y)
-      .strokeColor("#ccc")
-      .stroke()
-      .moveDown(1);
-
-    // RIDE DETAILS
+    /* =========================
+       RIDE DETAILS
+    ========================= */
     doc.fontSize(14).fillColor("#000").text("Ride Details", { underline: true }).moveDown(0.5);
-
     doc.fontSize(12).fillColor("#333");
     doc.text(`From: ${ride.pickupName}`);
     doc.text(`To: ${ride.dropName}`);
     doc.text(`Date: ${ride.date}`);
     doc.text(`Time: ${ride.time}`);
-    doc.text(`Distance: ${ride.distanceKm} km`);
-    doc.text(`Car: ${ride.carName}`);
+    doc.text(`Distance: ${ride.distanceKm || "-"} km`);
+    doc.text(`Car: ${ride.carName || "-"}`);
 
-    doc.moveDown(1);
-    // Divider
-    doc
-      .moveTo(50, doc.y)
-      .lineTo(550, doc.y)
-      .strokeColor("#ccc")
-      .stroke()
-      .moveDown(1);
+    doc.moveDown();
+    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke("#ccc").moveDown();
 
-    const totalFare = Number(ride.fare);
-    const gst = Number((totalFare * 18 / 118).toFixed(2));
-    const baseAmount = Number((totalFare - gst).toFixed(2));
+    /* =========================
+       FARE CALCULATION (FIXED)
+    ========================= */
+
+    const finalTotal = Number(
+      ride.finalFare || ride.fare || 0
+    );
+
+    const extraCharge = Number(
+      ride.extraChargeStatus === "paid" ? ride.extraChargeAmount || 0 : 0
+    );
+
+    const baseFareWithGst = finalTotal - extraCharge;
+
+    const gst = Number(((baseFareWithGst * 18) / 118).toFixed(2));
+
+    const baseFareWithoutGst = Number(
+      (baseFareWithGst - gst).toFixed(2)
+    );
+
+
+    /* =========================
+       FARE SUMMARY
+    ========================= */
+    doc.fontSize(14).fillColor("#000").text("Fare Summary", { underline: true }).moveDown(0.8);
+    doc.fontSize(12).fillColor("#333");
 
     doc.fontSize(14).fillColor("#000").text("Fare Summary", { underline: true }).moveDown(0.8);
-
     doc.fontSize(12).fillColor("#333");
-    doc.text(`Base Amount:      Rs. ${baseAmount}`);
-    doc.text(`GST (18%):          Rs. ${gst}`);
-    doc.moveDown(0.4);
 
-    doc.fontSize(14).fillColor("#000");
-    doc.text(`Total Fare Paid:Rs. ${totalFare}`);
+    doc.text(`Base Fare (Excl. GST):      Rs. ${baseFareWithoutGst}`);
+    doc.text(`GST (18%):                        Rs. ${gst}`);
+
+    if (extraCharge > 0) {
+      doc.text(`Extra Charge:                     Rs. ${extraCharge}`);
+    }
+
+    doc.moveDown(0.5);
+    doc.fontSize(14).fillColor("#000").text(`Total Amount Paid: Rs. ${finalTotal + extraCharge}`);
 
     doc.end();
 
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(500).json({ success: false, message: "Could not generate invoice" });
   }
 };

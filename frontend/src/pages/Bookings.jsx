@@ -196,31 +196,59 @@ const Bookings = () => {
     ...corporateRides.map((r) => ({ ...r, _type: "corporate" })),
   ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+  const getBaseFare = (ride) => {
+    return ride.finalFare ?? ride.fare ?? 0;
+  };
+
+  const getExtraCharge = (ride) => {
+    return ride.extraChargeAmount && ride.extraChargeStatus === "paid"
+      ? ride.extraChargeAmount
+      : 0;
+  };
+
+  const getTotalFare = (ride) => {
+    return getBaseFare(ride) + getExtraCharge(ride);
+  };
 
   return (
-    <div className="
-      min-h-screen 
-      bg-yellow-50 [[data-theme=dark]_&]:bg-gray-900
-      px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10 2xl:px-12
-      py-4 sm:py-6 md:py-8 lg:py-10
-    ">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 [[data-theme=dark]_&]:from-gray-950 [[data-theme=dark]_&]:via-gray-900 [[data-theme=dark]_&]:to-gray-950 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-24 py-6 sm:py-8 md:py-10 lg:py-12">
 
-      <motion.h2
-        initial={{ opacity: 0, y: -10 }}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-2xl sm:text-3xl lg:text-4xl font-bold text-yellow-400 mb-4 sm:mb-6 text-center"
+        className="max-w-7xl mx-auto mb-8 sm:mb-10 md:mb-12"
       >
-        My Bookings
-      </motion.h2>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-yellow-400 [[data-theme=dark]_&]:text-yellow-300 mb-2">
+          My Bookings
+        </h1>
 
-      {allRides.length === 0 && (
-        <p className="text-center text-sm sm:text-base text-gray-600 [[data-theme=dark]_&]:text-gray-300">
-          No bookings found.
+        <p className="text-sm sm:text-base text-gray-600 [[data-theme=dark]_&]:text-gray-400">
+          Manage and track all your rides in one place
         </p>
+      </motion.div>
+
+      {/* Empty State */}
+      {allRides.length === 0 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md mx-auto text-center py-16"
+        >
+          <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-yellow-100 [[data-theme=dark]_&]:bg-gray-800 flex items-center justify-center">
+            <span className="text-5xl">🚕</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 [[data-theme=dark]_&]:text-gray-200 mb-2">
+            No bookings yet
+          </h2>
+          <p className="text-gray-600 [[data-theme=dark]_&]:text-gray-400">
+            Your ride bookings will appear here once you make a reservation
+          </p>
+        </motion.div>
       )}
 
-      <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6">
-        {allRides.map((ride) => {
+      {/* Bookings Grid */}
+      <div className="max-w-7xl mx-auto grid gap-4 sm:gap-5 md:gap-6">
+        {allRides.map((ride, index) => {
           const { statusText, bgColor, textColor, borderColor } = getStatusBadge(ride);
           const canModifyRide = canModify(ride);
           const canCancelRide = canCancel(ride);
@@ -228,178 +256,213 @@ const Bookings = () => {
           return (
             <motion.div
               key={ride._id}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl 
-                         bg-white [[data-theme=dark]_&]:bg-gray-800 
-                         border border-yellow-300/40 shadow-lg 
-                         flex flex-col lg:flex-row lg:justify-between gap-4 sm:gap-5"
+              transition={{ delay: index * 0.1 }}
+              className="group relative bg-white/80 [[data-theme=dark]_&]:bg-gray-800/80 backdrop-blur-sm border border-gray-200 [[data-theme=dark]_&]:border-gray-700 rounded-3xl shadow-lg hover:shadow-2xl [[data-theme=dark]_&]:shadow-gray-900/50 transition-all duration-300 overflow-hidden"
             >
-              <div className="space-y-2 sm:space-y-3 flex-1 min-w-0">
-                <p className="text-xs sm:text-sm text-gray-500 [[data-theme=dark]_&]:text-gray-400 break-all">
-                  Booking ID: <span className="font-semibold">{ride._id}</span>
-                </p>
+              {/* Decorative gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/5 via-transparent to-orange-400/5 [[data-theme=dark]_&]:from-yellow-500/10 [[data-theme=dark]_&]:to-orange-500/10 pointer-events-none" />
 
-                <div>
-                  <p className="text-base sm:text-lg font-semibold text-gray-900 [[data-theme=dark]_&]:text-gray-100 break-words">
-                    {ride.pickupName}
-                  </p>
-                  <p className="text-yellow-500 text-lg sm:text-xl font-bold">↓</p>
-                  <p className="text-base sm:text-lg font-semibold text-gray-900 [[data-theme=dark]_&]:text-gray-100 break-words">
-                    {ride.dropName}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-700 [[data-theme=dark]_&]:text-gray-300">
-                  <p>
-                    <span className="font-semibold">Date:</span> {formatDMY(ride.date)}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Time:</span> {formatTime(ride.time)}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Passengers:</span> {ride.passengers || 1}
-                  </p>
-                  <p className="break-words">
-                    <span className="font-semibold">Car:</span> {ride.carName || "Not Assigned"}
-                  </p>
-                  <p className="col-span-1 sm:col-span-2 text-base sm:text-lg font-bold text-yellow-600 [[data-theme=dark]_&]:text-yellow-400">
-                    <span className="font-semibold">Total Paid:</span> ₹
-                    {ride._type === "corporate"
-                      ? ride.finalFare || ride.expectedFare || "Pending"
-                      : ride.finalFare || ride.fare || "N/A"}
-                  </p>
-
-                  {ride.rideStatus === "cancelled" && ride.refundStatus && (
-                    <p className="text-red-500 text-xs sm:text-sm col-span-1 sm:col-span-2">
-                      <span className="font-semibold">Refund:</span>{" "}
-                      {ride.refundStatus === "pending_approval"
-                        ? "Waiting for admin approval"
-                        : ride.refundStatus === "rejected"
-                          ? "Rejected by admin"
-                          : ride.refundStatus === "pending"
-                            ? "Refund Initiated"
-                            : ride.refundStatus === "processed"
-                              ? "Refund Completed"
-                              : "No Refund"}
+              <div className="relative p-5 sm:p-6 md:p-7 lg:p-8">
+                {/* Header Row */}
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm text-gray-500 [[data-theme=dark]_&]:text-gray-400 mb-2 font-mono">
+                      ID: <span className="font-semibold text-gray-700 [[data-theme=dark]_&]:text-gray-300">{ride._id}</span>
                     </p>
-                  )}
+                    <span
+                      className="inline-block px-4 py-1.5 text-xs sm:text-sm rounded-full font-semibold border-2 shadow-sm"
+                      style={{ backgroundColor: bgColor, color: textColor, borderColor }}
+                    >
+                      {statusText}
+                    </span>
+                  </div>
                 </div>
 
-                {ride._type === "corporate" && ride.status === "link_sent" && (
-                  <Link
-                    to={ride.paymentLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block mt-2 text-sm sm:text-base text-yellow-600 [[data-theme=dark]_&]:text-yellow-400 font-semibold hover:underline"
-                  >
-                    Pay Now →
-                  </Link>
-                )}
+                {/* Main Content Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+                  {/* Left Section - Route & Details */}
+                  <div className="lg:col-span-7 space-y-5">
+                    {/* Route */}
+                    <div className="relative pl-8">
+                      <div className="absolute left-0 top-2 bottom-2 w-1 bg-gradient-to-b from-yellow-400 via-amber-400 to-orange-400 [[data-theme=dark]_&]:from-yellow-500 [[data-theme=dark]_&]:via-amber-500 [[data-theme=dark]_&]:to-orange-500 rounded-full" />
 
-                {ride._type === "corporate" && ride.status === "pending_negotiation" && (
-                  <p className="text-yellow-600 [[data-theme=dark]_&]:text-yellow-400 text-xs sm:text-sm">
-                    Waiting for admin pricing approval
-                  </p>
-                )}
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-3">
+                          <div className="mt-1 w-3 h-3 rounded-full bg-yellow-500 [[data-theme=dark]_&]:bg-yellow-400 ring-4 ring-yellow-100 [[data-theme=dark]_&]:ring-yellow-900/50 flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="text-xs text-gray-500 [[data-theme=dark]_&]:text-gray-400 mb-1">Pickup</p>
+                            <p className="text-base sm:text-lg font-semibold text-gray-900 [[data-theme=dark]_&]:text-gray-100 break-words leading-tight">
+                              {ride.pickupName}
+                            </p>
+                          </div>
+                        </div>
 
-                {ride.rideStatus === "active" && (
-                  <p className="text-xs sm:text-sm text-green-600 [[data-theme=dark]_&]:text-green-400 font-medium">
-                    Your ride is currently in progress
-                  </p>
-                )}
-                {ride.rideStatus === "completed" && (
-                  <p className="text-xs sm:text-sm text-gray-600 [[data-theme=dark]_&]:text-gray-400 font-medium">
-                    This ride has been completed
-                  </p>
-                )}
+                        <div className="flex items-start gap-3">
+                          <div className="mt-1 w-3 h-3 rounded-full bg-orange-500 [[data-theme=dark]_&]:bg-orange-400 ring-4 ring-orange-100 [[data-theme=dark]_&]:ring-orange-900/50 flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="text-xs text-gray-500 [[data-theme=dark]_&]:text-gray-400 mb-1">Dropoff</p>
+                            <p className="text-base sm:text-lg font-semibold text-gray-900 [[data-theme=dark]_&]:text-gray-100 break-words leading-tight">
+                              {ride.dropName}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-                {ride.paymentStatus === "paid" && ride._type !== "corporate" && (
-                  <Link
-                    to={`${import.meta.env.VITE_BACKEND_URL}/api/v1/payment/invoice/${ride._id}`}
-                    reloadDocument
-                    className="mt-2 inline-block text-xs sm:text-sm text-blue-600 hover:underline [[data-theme=dark]_&]:text-yellow-300"
-                  >
-                    📄 Download Invoice
-                  </Link>
-                )}
-              </div>
+                    {/* Meta Info Grid */}
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-2">
+                      <div className="bg-gray-50 [[data-theme=dark]_&]:bg-gray-900/50 rounded-2xl p-3 sm:p-4">
+                        <p className="text-xs text-gray-500 [[data-theme=dark]_&]:text-gray-400 mb-1">Date</p>
+                        <p className="text-sm sm:text-base font-semibold text-gray-900 [[data-theme=dark]_&]:text-gray-100">
+                          {formatDMY(ride.date)}
+                        </p>
+                      </div>
 
-              <div className="flex flex-col items-start lg:items-end gap-2 sm:gap-3 mt-2 lg:mt-0 w-full lg:w-auto lg:min-w-[200px]">
-                <span
-                  className="px-3 py-1 text-xs sm:text-sm rounded-full font-semibold border self-start lg:self-end"
-                  style={{
-                    backgroundColor: bgColor,
-                    color: textColor,
-                    borderColor: borderColor,
-                  }}
-                >
-                  {statusText}
-                </span>
+                      <div className="bg-gray-50 [[data-theme=dark]_&]:bg-gray-900/50 rounded-2xl p-3 sm:p-4">
+                        <p className="text-xs text-gray-500 [[data-theme=dark]_&]:text-gray-400 mb-1">Time</p>
+                        <p className="text-sm sm:text-base font-semibold text-gray-900 [[data-theme=dark]_&]:text-gray-100">
+                          {formatTime(ride.time)}
+                        </p>
+                      </div>
 
-                {(canModifyRide || canCancelRide) && (
-                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full lg:w-auto">
-                    {canCancelRide && (
-                      <button
-                        onClick={() => cancelRide(ride._id)}
-                        className="w-full sm:w-auto px-4 py-2 rounded-lg text-sm sm:text-base text-white cursor-pointer bg-red-500 hover:bg-red-600 transition-colors font-medium"
-                      >
-                        Cancel Ride
-                      </button>
-                    )}
+                      <div className="bg-gray-50 [[data-theme=dark]_&]:bg-gray-900/50 rounded-2xl p-3 sm:p-4">
+                        <p className="text-xs text-gray-500 [[data-theme=dark]_&]:text-gray-400 mb-1">Passengers</p>
+                        <p className="text-sm sm:text-base font-semibold text-gray-900 [[data-theme=dark]_&]:text-gray-100">
+                          {ride.passengers || 1}
+                        </p>
+                      </div>
 
-                    {canModifyRide && (
-                      <button
-                        onClick={() => navigate(`/modify/${ride._id}`)}
-                        className="w-full sm:w-auto px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 cursor-pointer transition-colors font-semibold text-sm sm:text-base"
-                      >
-                        Modify Ride
-                      </button>
-                    )}
+                      <div className="bg-gray-50 [[data-theme=dark]_&]:bg-gray-900/50 rounded-2xl p-3 sm:p-4">
+                        <p className="text-xs text-gray-500 [[data-theme=dark]_&]:text-gray-400 mb-1">Vehicle</p>
+                        <p className="text-sm sm:text-base font-semibold text-gray-900 [[data-theme=dark]_&]:text-gray-100 truncate">
+                          {ride.carName || "Not Assigned"}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                )}
 
-                {["pending", "link_sent"].includes(ride.extraChargeStatus) && ride.extraPaymentLink && ride.rideStatus !== "cancelled" && (
-                  <Link
-                    to={ride.extraPaymentLink}
-                    target="_blank"
-                    onClick={() => setPayingId(ride._id)}
-                    className={`w-full lg:w-auto px-4 py-2 rounded-lg font-semibold text-center text-sm sm:text-base
-                      ${payingId === ride._id
-                        ? "bg-gray-300 cursor-not-allowed"
-                        : "bg-yellow-400 hover:bg-yellow-500"}
-                    `}
-                    style={{ pointerEvents: payingId === ride._id ? "none" : "auto" }}
-                  >
-                    {payingId === ride._id
-                      ? "Redirecting..."
-                      : `Pay Extra Charge ₹${ride.extraChargeAmount}`}
-                  </Link>
-                )}
+                  {/* Right Section - Pricing & Actions */}
+                  <div className="lg:col-span-5 flex flex-col gap-4">
+                    {/* Pricing Card */}
+                    <div className="bg-gradient-to-br from-yellow-50 to-amber-50 [[data-theme=dark]_&]:from-yellow-900/20 [[data-theme=dark]_&]:to-amber-900/20 rounded-2xl p-4 sm:p-5 border border-yellow-200 [[data-theme=dark]_&]:border-yellow-800/50">
+                      <p className="text-xs sm:text-sm text-gray-600 [[data-theme=dark]_&]:text-gray-400 mb-2">
+                        Total Amount
+                      </p>
+                      <p className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 [[data-theme=dark]_&]:from-yellow-400 [[data-theme=dark]_&]:to-orange-400 bg-clip-text text-transparent">
+                        ₹{ride._type === "corporate" ? ride.finalFare || ride.expectedFare || "Pending" : getTotalFare(ride)}
+                      </p>
 
-                {ride.extraChargeStatus === "paid" && (
-                  <p className="text-green-600 text-xs sm:text-sm mt-2">
-                    Extra charge paid ✔
-                  </p>
-                )}
+                      {ride._type !== "corporate" && ride.extraChargeAmount > 0 && (
+                        <div className="mt-3 pt-3 border-t border-yellow-200 [[data-theme=dark]_&]:border-yellow-800/30 space-y-1 text-xs sm:text-sm">
+                          <div className="flex justify-between text-gray-600 [[data-theme=dark]_&]:text-gray-400">
+                            <span>Base Fare</span>
+                            <span className="font-semibold">₹{getBaseFare(ride)}</span>
+                          </div>
+                          <div className="flex justify-between text-gray-600 [[data-theme=dark]_&]:text-gray-400">
+                            <span>Extra Charge</span>
+                            <span className="font-semibold">
+                              ₹{ride.extraChargeAmount}
+                              <span className="ml-1 text-xs">
+                                {ride.extraChargeStatus === "paid" ? "✓" : "⏳"}
+                              </span>
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
 
-                {!canModifyRide && !canCancelRide && ride.rideStatus === "completed" && (
-                  <p className="text-xs text-gray-500 [[data-theme=dark]_&]:text-gray-400 italic lg:text-right">
-                    Ride completed
-                  </p>
-                )}
+                    {/* Status Messages */}
+                    {ride.rideStatus === "active" && (
+                      <div className="bg-blue-50 [[data-theme=dark]_&]:bg-blue-900/20 border border-blue-200 [[data-theme=dark]_&]:border-blue-800/50 rounded-xl p-3 text-xs sm:text-sm text-blue-700 [[data-theme=dark]_&]:text-blue-300">
+                        🚗 Your ride is currently in progress
+                      </div>
+                    )}
 
-                {!canModifyRide && !canCancelRide && ride.rideStatus === "cancelled" && (
-                  <p className="text-xs text-gray-500 [[data-theme=dark]_&]:text-gray-400 italic lg:text-right">
-                    Ride cancelled
-                  </p>
-                )}
+                    {ride.rideStatus === "completed" && (
+                      <div className="bg-green-50 [[data-theme=dark]_&]:bg-green-900/20 border border-green-200 [[data-theme=dark]_&]:border-green-800/50 rounded-xl p-3 text-xs sm:text-sm text-green-700 [[data-theme=dark]_&]:text-green-300">
+                        ✓ This ride has been completed
+                      </div>
+                    )}
 
-                {ride.rideStatus === "active" && !canCancelRide && (
-                  <p className="text-xs text-amber-600 [[data-theme=dark]_&]:text-amber-400 italic lg:text-right">
-                    Active rides cannot be cancelled
-                  </p>
-                )}
+                    {ride._type === "corporate" && ride.status === "pending_negotiation" && (
+                      <div className="bg-yellow-50 [[data-theme=dark]_&]:bg-yellow-900/20 border border-yellow-200 [[data-theme=dark]_&]:border-yellow-800/50 rounded-xl p-3 text-xs sm:text-sm text-yellow-700 [[data-theme=dark]_&]:text-yellow-300">
+                        ⏳ Waiting for admin pricing approval
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="space-y-3">
+                      {ride._type === "corporate" && ride.status === "link_sent" && (
+                        <Link
+                          to={ride.paymentLink}
+                          target="_blank"
+                          className="block w-full text-center px-4 py-3 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-400 hover:from-yellow-500 hover:to-amber-500 [[data-theme=dark]_&]:from-yellow-500 [[data-theme=dark]_&]:to-amber-500 [[data-theme=dark]_&]:hover:from-yellow-600 [[data-theme=dark]_&]:hover:to-amber-600 text-gray-900 [[data-theme=dark]_&]:text-gray-900 text-sm sm:text-base font-bold shadow-md hover:shadow-lg transition-all"
+                        >
+                          Pay Now →
+                        </Link>
+                      )}
+
+                      {ride.paymentStatus === "paid" && ride._type !== "corporate" && (
+                        <Link
+                          to={`${import.meta.env.VITE_BACKEND_URL}/api/v1/payment/invoice/${ride._id}`}
+                          reloadDocument
+                          className="block w-full text-center px-4 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 [[data-theme=dark]_&]:bg-gray-700 [[data-theme=dark]_&]:hover:bg-gray-600 text-gray-900 [[data-theme=dark]_&]:text-gray-100 text-sm font-semibold transition-all"
+                        >
+                          📄 Download Invoice
+                        </Link>
+                      )}
+
+                      {["pending", "link_sent"].includes(ride.extraChargeStatus) &&
+                        ride.extraPaymentLink &&
+                        ride.rideStatus !== "cancelled" && (
+                          <Link
+                            to={ride.extraPaymentLink}
+                            target="_blank"
+                            onClick={() => setPayingId(ride._id)}
+                            className={`block w-full text-center px-4 py-3 rounded-xl text-sm sm:text-base font-bold transition-all ${payingId === ride._id
+                              ? "bg-gray-300 [[data-theme=dark]_&]:bg-gray-600 text-gray-600 [[data-theme=dark]_&]:text-gray-400 cursor-not-allowed"
+                              : "bg-gradient-to-r from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 [[data-theme=dark]_&]:from-orange-500 [[data-theme=dark]_&]:to-red-500 text-white shadow-md hover:shadow-lg"
+                              }`}
+                            style={{ pointerEvents: payingId === ride._id ? "none" : "auto" }}
+                          >
+                            {payingId === ride._id
+                              ? "Redirecting..."
+                              : `Pay Extra Charge ₹${ride.extraChargeAmount}`}
+                          </Link>
+                        )}
+
+                      {ride.extraChargeStatus === "paid" && (
+                        <div className="bg-green-50 [[data-theme=dark]_&]:bg-green-900/20 border border-green-200 [[data-theme=dark]_&]:border-green-800/50 rounded-xl p-3 text-xs sm:text-sm text-green-700 [[data-theme=dark]_&]:text-green-300 text-center font-semibold">
+                          ✓ Extra charge paid
+                        </div>
+                      )}
+
+                      {(canModifyRide || canCancelRide) && (
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          {canModifyRide && (
+                            <button
+                              onClick={() => navigate(`/modify/${ride._id}`)}
+                              className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-400 hover:from-yellow-500 hover:to-amber-500 [[data-theme=dark]_&]:from-yellow-500 [[data-theme=dark]_&]:to-amber-500 [[data-theme=dark]_&]:hover:from-yellow-600 [[data-theme=dark]_&]:hover:to-amber-600 text-gray-900 [[data-theme=dark]_&]:text-gray-900 text-sm sm:text-base font-bold shadow-md hover:shadow-lg transition-all"
+                            >
+                              Modify Ride
+                            </button>
+                          )}
+
+                          {canCancelRide && (
+                            <button
+                              onClick={() => cancelRide(ride._id)}
+                              className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 [[data-theme=dark]_&]:from-red-600 [[data-theme=dark]_&]:to-red-700 [[data-theme=dark]_&]:hover:from-red-700 [[data-theme=dark]_&]:hover:to-red-800 text-white text-sm sm:text-base font-bold shadow-md hover:shadow-lg transition-all"
+                            >
+                              Cancel Ride
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </motion.div>
           );
