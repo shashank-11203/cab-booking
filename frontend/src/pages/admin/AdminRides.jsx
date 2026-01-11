@@ -577,6 +577,7 @@ export default function AdminRides() {
     filterRef.current = filter;
   }, [filter]);
 
+  // ✅ Define getRideDisplayStatus with useCallback BEFORE using it
   const getRideDisplayStatus = useCallback((ride) => {
     const now = new Date();
     const rideDateTime = new Date(`${ride.date}T${ride.time}`);
@@ -589,7 +590,6 @@ export default function AdminRides() {
   }, []);
 
   useEffect(() => {
-    console.log("🔄 Filter changed to:", filter);
     fetchRides(true);
   }, [filter]);
 
@@ -601,8 +601,9 @@ export default function AdminRides() {
         if (showLoader) setLoading(true);
 
         const res = await apiClient.get("/api/v1/admin/rides");
-
         const all = res.data.rides || [];
+
+        console.log(`📡 Polling: Fetched ${all.length} rides at ${new Date().toISOString()}`);
 
         setAllRides(all);
 
@@ -615,8 +616,10 @@ export default function AdminRides() {
         } else if (currentFilter === "active") {
           filtered = all.filter(ride => {
             const displayStatus = getRideDisplayStatus(ride);
+            console.log(`Ride ${ride._id}: Backend=${ride.rideStatus}, Display=${displayStatus}`);
             return displayStatus === "active";
           });
+          console.log(`✅ Active rides: ${filtered.length}`);
         } else if (currentFilter === "upcoming") {
           filtered = all.filter(ride => {
             const displayStatus = getRideDisplayStatus(ride);
@@ -628,7 +631,7 @@ export default function AdminRides() {
 
         setRides([...filtered]);
       } catch (err) {
-        console.error("Polling error:", err);
+        console.error("❌ Polling error:", err);
       } finally {
         if (showLoader) setLoading(false);
       }
@@ -636,19 +639,20 @@ export default function AdminRides() {
 
     function startPolling() {
       if (intervalId) {
+        console.log("⚠️ Polling already running");
         return;
       }
-
-      setTimeout(() => {
+      console.log("✅ Starting polling at", new Date().toISOString());
+      fetchAndFilter(false);
+      intervalId = setInterval(() => {
+        console.log("⏰ Polling tick at", new Date().toISOString());
         fetchAndFilter(false);
-        intervalId = setInterval(() => {
-          fetchAndFilter(false);
-        }, 15000);
-      }, 2000);
+      }, 15000);
     }
 
     function stopPolling() {
       if (intervalId) {
+        console.log("⏸️ Stopping polling");
         clearInterval(intervalId);
         intervalId = null;
       }
@@ -656,8 +660,10 @@ export default function AdminRides() {
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
+        console.log("👁️ Tab visible - starting polling");
         startPolling();
       } else {
+        console.log("🙈 Tab hidden - stopping polling");
         stopPolling();
       }
     };
@@ -679,14 +685,25 @@ export default function AdminRides() {
       if (showLoading) setLoading(true);
 
       const res = await apiClient.get("/api/v1/admin/rides");
-
       const all = res.data.rides || [];
 
       setAllRides(all);
 
-      // ... rest of your code
+      let filtered = [];
+
+      if (filter === "all") {
+        filtered = all;
+      } else if (filter === "active") {
+        filtered = all.filter(ride => getRideDisplayStatus(ride) === "active");
+      } else if (filter === "upcoming") {
+        filtered = all.filter(ride => getRideDisplayStatus(ride) === "upcoming");
+      } else {
+        filtered = all.filter(r => r.rideStatus === filter);
+      }
+
+      setRides(filtered);
     } catch (err) {
-      console.error("fetchRides ERROR:", err);
+      console.error("fetchRides error:", err);
     } finally {
       if (showLoading) setLoading(false);
     }
