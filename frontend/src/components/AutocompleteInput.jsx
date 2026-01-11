@@ -14,13 +14,13 @@ const AutocompleteInput = ({
   airportDirection,
   minChars = 2,
 }) => {
-  const [q, setQ] = useState(value?.name || value || "");
+  const [q, setQ] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isExactMatch, setIsExactMatch] = useState(true);
   const [showDropdown, setShowDropdown] = useState(false);
   const [error, setError] = useState(null);
-  const [isSelected, setIsSelected] = useState(false); // ✅ NEW STATE
+  const [isSelected, setIsSelected] = useState(false);
 
   const controllerRef = useRef(null);
   const boxRef = useRef();
@@ -29,23 +29,23 @@ const AutocompleteInput = ({
 
   const deduplicateSuggestions = (places) => {
     const seen = new Map();
-    
+
     return places.filter((place) => {
       const simplifiedName = simplifyLocation(place).toLowerCase().trim();
       const coordKey = `${parseFloat(place.lat).toFixed(4)},${parseFloat(place.lon).toFixed(4)}`;
       const uniqueKey = `${simplifiedName}-${coordKey}`;
-      
+
       if (seen.has(uniqueKey)) {
         return false;
       }
-      
+
       for (const [key, _] of seen) {
         const existingName = key.split('-')[0];
         if (existingName === simplifiedName) {
           return false;
         }
       }
-      
+
       seen.set(uniqueKey, true);
       return true;
     });
@@ -53,17 +53,18 @@ const AutocompleteInput = ({
 
   useEffect(() => {
     const newValue = value?.name || value || "";
+
     setQ(newValue);
+    setSuggestions([]);
+    setError(null);
 
     if (!newValue) {
-      setSuggestions([]);
-      setShowDropdown(false);
-      setError(null);
+
       setIsSelected(false);
-    } else {
-      setIsSelected(true);
-    }
+      setShowDropdown(false);
+    } 
   }, [value]);
+
 
   useEffect(() => {
     if (isSelected) {
@@ -139,7 +140,7 @@ const AutocompleteInput = ({
       } catch (err) {
         if (!["AbortError", "CanceledError"].includes(err.name)) {
           console.error("Autocomplete error:", err);
-          
+
           if (err.code === 'ETIMEDOUT' || err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
             if (retryCountRef.current < MAX_RETRIES) {
               retryCountRef.current++;
@@ -167,7 +168,7 @@ const AutocompleteInput = ({
       c.abort();
     };
   }, [q, minChars, isSelected]);
-  
+
   useEffect(() => {
     const handler = (e) => {
       if (boxRef.current && !boxRef.current.contains(e.target)) {
@@ -295,8 +296,8 @@ const AutocompleteInput = ({
             <li className="p-3 text-sm text-gray-500 [[data-theme=dark]_&]:text-gray-300">
               <div className="flex items-center gap-2">
                 <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
                 Searching...
               </div>

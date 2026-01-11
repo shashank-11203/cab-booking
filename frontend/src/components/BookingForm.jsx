@@ -328,6 +328,7 @@ const BookingForm = ({ onShowCabs }) => {
             </label>
 
             <AutocompleteInput
+              value={pickupText}
               rideType={rideType}
               field="pickup"
               airportDirection={airportDirection}
@@ -341,12 +342,15 @@ const BookingForm = ({ onShowCabs }) => {
                     lat: data.lat,
                     lon: data.lon,
                   });
+                  setPickupText(data.formattedName);
                   return;
                 }
                 setPickup(p);
+                setPickupText(p.name);
               }}
               placeholder="Enter pickup"
             />
+
           </div>
 
           <div>
@@ -356,6 +360,7 @@ const BookingForm = ({ onShowCabs }) => {
             </label>
 
             <AutocompleteInput
+              value={dropText}
               rideType={rideType}
               field="drop"
               airportDirection={airportDirection}
@@ -369,9 +374,11 @@ const BookingForm = ({ onShowCabs }) => {
                     lat: data.lat,
                     lon: data.lon,
                   });
+                  setDropText(data.formattedName);
                   return;
                 }
                 setDrop(p);
+                setDropText(p.name);
               }}
               placeholder="Enter drop"
             />

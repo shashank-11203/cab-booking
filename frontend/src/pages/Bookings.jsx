@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
+import { openGoogleMaps } from "../utils/track";
 
 const Bookings = () => {
   const { user } = useAuth();
@@ -213,15 +214,15 @@ const Bookings = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 [[data-theme=dark]_&]:from-gray-950 [[data-theme=dark]_&]:via-gray-900 [[data-theme=dark]_&]:to-gray-950 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-24 py-6 sm:py-8 md:py-10 lg:py-12">
 
+      {/* Header Section */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-7xl mx-auto mb-8 sm:mb-10 md:mb-12"
       >
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-yellow-400 [[data-theme=dark]_&]:text-yellow-300 mb-2">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 [[data-theme=dark]_&]:text-gray-100 mb-2">
           My Bookings
         </h1>
-
         <p className="text-sm sm:text-base text-gray-600 [[data-theme=dark]_&]:text-gray-400">
           Manage and track all your rides in one place
         </p>
@@ -394,6 +395,15 @@ const Bookings = () => {
 
                     {/* Action Buttons */}
                     <div className="space-y-3">
+                      {["upcoming", "active"].includes(ride.rideStatus) && (
+                        <button
+                          onClick={() => openGoogleMaps(ride.pickupName, ride.dropName)}
+                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 [[data-theme=dark]_&]:from-blue-600 [[data-theme=dark]_&]:to-blue-700 [[data-theme=dark]_&]:hover:from-blue-700 [[data-theme=dark]_&]:hover:to-blue-800 text-white text-sm sm:text-base font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                        >
+                          Track on Google Maps
+                        </button>
+                      )}
+
                       {ride._type === "corporate" && ride.status === "link_sent" && (
                         <Link
                           to={ride.paymentLink}
@@ -422,8 +432,8 @@ const Bookings = () => {
                             target="_blank"
                             onClick={() => setPayingId(ride._id)}
                             className={`block w-full text-center px-4 py-3 rounded-xl text-sm sm:text-base font-bold transition-all ${payingId === ride._id
-                              ? "bg-gray-300 [[data-theme=dark]_&]:bg-gray-600 text-gray-600 [[data-theme=dark]_&]:text-gray-400 cursor-not-allowed"
-                              : "bg-gradient-to-r from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 [[data-theme=dark]_&]:from-orange-500 [[data-theme=dark]_&]:to-red-500 text-white shadow-md hover:shadow-lg"
+                                ? "bg-gray-300 [[data-theme=dark]_&]:bg-gray-600 text-gray-600 [[data-theme=dark]_&]:text-gray-400 cursor-not-allowed"
+                                : "bg-gradient-to-r from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 [[data-theme=dark]_&]:from-orange-500 [[data-theme=dark]_&]:to-red-500 text-white shadow-md hover:shadow-lg"
                               }`}
                             style={{ pointerEvents: payingId === ride._id ? "none" : "auto" }}
                           >
