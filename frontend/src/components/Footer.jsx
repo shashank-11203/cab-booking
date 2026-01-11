@@ -30,11 +30,11 @@ export default function Footer() {
 
         <div className="text-center sm:text-left">
           <h2 className="text-xl sm:text-2xl font-bold text-yellow-400">
-            DoorDarshan Travels
+            Door Darshan Cabs
           </h2>
           <p className="mt-2 sm:mt-3 text-xs sm:text-sm leading-relaxed max-w-xs mx-auto sm:mx-0">
             Reliable, premium and professional cab service across Kutch & Gujarat.
-            Comfort, safety & punctuality — every ride, every time.
+            Comfort, safety & punctuality every ride, every time.
           </p>
 
           <div className="mt-4 sm:mt-6 flex gap-3 sm:gap-4 justify-center sm:justify-start">
@@ -90,7 +90,7 @@ export default function Footer() {
 
       <div className="text-center mt-10 sm:mt-12 md:mt-14 text-xs sm:text-sm opacity-80 px-4">
         © {new Date().getFullYear()} 
-        <span className="text-yellow-400 font-semibold"> DoorDarshan Travels</span>.  
+        <span className="text-yellow-400 font-semibold"> Door Darshan Cabs</span>.  
         All Rights Reserved.
       </div>
 

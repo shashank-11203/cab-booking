@@ -27,7 +27,7 @@ export const generateInvoice = async (req, res) => {
     /* =========================
        HEADER
     ========================= */
-    doc.fontSize(22).fillColor("#000").text("Durdarshan Travels");
+    doc.fontSize(22).fillColor("#000").text("Door Darshan Cabs");
 
     doc
       .fontSize(10)

@@ -112,7 +112,7 @@ export default function AboutUs() {
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center 
                                text-gray-900 [[data-theme=dark]_&]:text-white 
                                mb-8 sm:mb-10 md:mb-14">
-                    Why People Trust DoorDarshan
+                    Why People Trust Door Darshan Cabs
                 </h2>
 
                 <div className="
@@ -179,7 +179,7 @@ export default function AboutUs() {
                             Ride Network
                         </p>
                         <p className="text-xs sm:text-sm mt-1 opacity-80">
-                            Corporate-grade vehicles & comfort
+                            Corporate grade vehicles & comfort
                         </p>
                     </div>
 
