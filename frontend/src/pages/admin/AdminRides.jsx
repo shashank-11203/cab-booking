@@ -26,10 +26,16 @@ export default function AdminRides() {
   const [allRides, setAllRides] = useState([]);
 
   const filterRef = useRef(filter);
+  const getRideDisplayStatusRef = useRef(getRideDisplayStatus);
 
+  // Update refs when they change
   useEffect(() => {
     filterRef.current = filter;
   }, [filter]);
+
+  useEffect(() => {
+    getRideDisplayStatusRef.current = getRideDisplayStatus;
+  }, [getRideDisplayStatus]);
 
   useEffect(() => {
     fetchRides(true);
@@ -48,6 +54,7 @@ export default function AdminRides() {
         setAllRides(all);
 
         const currentFilter = filterRef.current;
+        const getStatus = getRideDisplayStatusRef.current;
 
         let filtered = [];
 
@@ -55,12 +62,12 @@ export default function AdminRides() {
           filtered = all;
         } else if (currentFilter === "active") {
           filtered = all.filter(ride => {
-            const displayStatus = getRideDisplayStatus(ride);
+            const displayStatus = getStatus(ride);
             return displayStatus === "active";
           });
         } else if (currentFilter === "upcoming") {
           filtered = all.filter(ride => {
-            const displayStatus = getRideDisplayStatus(ride);
+            const displayStatus = getStatus(ride);
             return displayStatus === "upcoming";
           });
         } else {
@@ -69,7 +76,7 @@ export default function AdminRides() {
 
         setRides([...filtered]);
       } catch (err) {
-        console.error("dashbord rides polling error:", err);
+        console.error("Admin rides polling error:", err);
       } finally {
         if (showLoader) setLoading(false);
       }
@@ -81,7 +88,9 @@ export default function AdminRides() {
       }
 
       fetchAndFilter(false);
-      intervalId = setInterval(() => fetchAndFilter(false), 15000);
+      intervalId = setInterval(() => {
+        fetchAndFilter(false);
+      }, 15000);
     }
 
     function stopPolling() {
@@ -134,11 +143,12 @@ export default function AdminRides() {
 
       setRides(filtered);
     } catch (err) {
-      console.error("❌ fetchRides error:", err);
+      console.error("fetchRides error:", err);
     } finally {
       if (showLoading) setLoading(false);
     }
   }
+
 
   async function handleMarkCompleted(rideId) {
     if (!window.confirm("Mark this ride as completed?")) return;
