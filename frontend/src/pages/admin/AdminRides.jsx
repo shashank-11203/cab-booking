@@ -45,39 +45,31 @@ export default function AdminRides() {
         const res = await apiClient.get("/api/v1/admin/rides");
         const all = res.data.rides || [];
 
-        console.log(`📡 Polling: Fetched ${all.length} rides`);
-
-        // Update allRides
         setAllRides(all);
 
         const currentFilter = filterRef.current;
 
-        // Filter based on current filter and RECALCULATE status
         let filtered = [];
 
         if (currentFilter === "all") {
           filtered = all;
         } else if (currentFilter === "active") {
-          // ✅ Recalculate display status for each ride
           filtered = all.filter(ride => {
             const displayStatus = getRideDisplayStatus(ride);
-            console.log(`Ride ${ride._id}: ${displayStatus}`);
             return displayStatus === "active";
           });
-          console.log(`✅ Active rides: ${filtered.length}`);
         } else if (currentFilter === "upcoming") {
           filtered = all.filter(ride => {
             const displayStatus = getRideDisplayStatus(ride);
             return displayStatus === "upcoming";
           });
         } else {
-          // For other filters (completed, cancelled, etc.)
           filtered = all.filter(r => r.rideStatus === currentFilter);
         }
 
-        setRides(filtered);
+        setRides([...filtered]);
       } catch (err) {
-        console.error("❌ Admin rides polling error:", err);
+        console.error("dashbord rides polling error:", err);
       } finally {
         if (showLoader) setLoading(false);
       }
@@ -85,7 +77,6 @@ export default function AdminRides() {
 
     function startPolling() {
       if (intervalId) {
-        console.log("⚠️ Polling already running");
         return;
       }
 
@@ -95,7 +86,6 @@ export default function AdminRides() {
 
     function stopPolling() {
       if (intervalId) {
-        console.log("⏸️ Stopping polling");
         clearInterval(intervalId);
         intervalId = null;
       }
@@ -103,10 +93,8 @@ export default function AdminRides() {
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        console.log("👁️ Tab visible - starting polling");
         startPolling();
       } else {
-        console.log("🙈 Tab hidden - stopping polling");
         stopPolling();
       }
     };
@@ -152,6 +140,17 @@ export default function AdminRides() {
     }
   }
 
+  async function handleMarkCompleted(rideId) {
+    if (!window.confirm("Mark this ride as completed?")) return;
+
+    try {
+      await apiClient.put(`/api/v1/admin/rides/${rideId}/complete`);
+      await fetchRides(false);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to mark ride completed.");
+    }
+  }
   function refundBadge(status) {
     switch (status) {
       case "pending_approval":
@@ -164,18 +163,6 @@ export default function AdminRides() {
         return { label: "Refund Rejected", color: "text-red-600" };
       default:
         return { label: "No Refund", color: "text-gray-500" };
-    }
-  }
-
-  async function handleMarkCompleted(rideId) {
-    if (!window.confirm("Mark this ride as completed?")) return;
-
-    try {
-      await apiClient.put(`/api/v1/admin/rides/${rideId}/complete`);
-      fetchRides(false);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to mark ride completed.");
     }
   }
 

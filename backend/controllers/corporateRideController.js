@@ -142,12 +142,13 @@ export const generateCorporatePaymentLink = async (req, res) => {
 export const getPendingCorporateRides = async (req, res) => {
   try {
     const rides = await CorporateRide.find({
-      status: "pending_negotiation"
-    }).populate("userId", "name phone email");
+      status: { $in: ["pending_negotiation", "payment_pending", "paid"] }
+    })
+      .populate("userId", "name phone email")
+      .sort({ updatedAt: -1 });
 
-    return res.json({ success: true, rides });
+    res.json({ success: true, rides });
   } catch (err) {
-    console.error("fetch pending corporate rides error:", err);
-    return res.status(500).json({ success: false });
+    res.status(500).json({ success: false });
   }
 };

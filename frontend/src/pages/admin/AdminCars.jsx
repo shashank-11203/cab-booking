@@ -61,12 +61,10 @@ export default function AdminCars() {
     return `${formatDate(dateStr)}, ${formatTime(timeStr)}`;
   };
 
-  // Fetch cars initially and when filter changes
   useEffect(() => {
     fetchCars();
   }, [filter, refreshKey]);
 
-  // Polling for availability updates (only when tab is active)
   useEffect(() => {
     let intervalId = null;
 
@@ -77,14 +75,12 @@ export default function AdminCars() {
         if (res.data?.success && res.data.availability) {
           const updates = res.data.availability;
 
-          // Update cars with new availability
           setCars(prev =>
             prev.map(car => {
               const newAvailability = updates[car._id] ?? updates[car.carId];
 
-              // Only update if availability actually changed
               if (newAvailability !== undefined && newAvailability !== car.availability) {
-                console.log(`Car ${car.name} availability changed: ${car.availability} → ${newAvailability}`);
+               
                 return { ...car, availability: newAvailability };
               }
 
@@ -98,49 +94,40 @@ export default function AdminCars() {
     };
 
     const startPolling = () => {
-      // Clear any existing interval
+
       if (intervalId) clearInterval(intervalId);
 
-      // Fetch immediately
       fetchAvailability();
 
-      // Then poll every 60 seconds
       intervalId = setInterval(fetchAvailability, 60000);
-      console.log("✅ Polling started");
     };
 
     const stopPolling = () => {
       if (intervalId) {
         clearInterval(intervalId);
         intervalId = null;
-        console.log("⏸️ Polling stopped");
       }
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        console.log("👁️ Tab visible - starting polling");
         startPolling();
       } else {
-        console.log("🙈 Tab hidden - stopping polling");
         stopPolling();
       }
     };
 
-    // Start polling if tab is currently visible
     if (document.visibilityState === "visible") {
       startPolling();
     }
 
-    // Listen for tab visibility changes
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    // Cleanup on unmount
     return () => {
       stopPolling();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [cars.length]); // Re-run if cars array changes
+  }, []);
 
   async function fetchCars() {
     try {
@@ -150,26 +137,8 @@ export default function AdminCars() {
       });
 
       const carsWithAvail = res.data.cars || [];
-      console.log("📦 Fetched cars:", carsWithAvail.length);
       setCars(carsWithAvail);
     } catch (err) {
-      console.error("fetchCars error:", err);
-      setCars([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function fetchCars() {
-    try {
-      setLoading(true);
-      const res = await apiClient.get("/api/v1/admin/cars", {
-        params: { category: filter === "all" ? "all" : filter },
-      });
-      const carsWithAvail = res.data.cars || [];
-      setCars(carsWithAvail);
-    } catch (err) {
-      console.error("fetchCars:", err);
       setCars([]);
     } finally {
       setLoading(false);
@@ -182,7 +151,6 @@ export default function AdminCars() {
       await apiClient.delete(`/api/v1/admin/cars/${carId}`);
       setRefreshKey(k => k + 1);
     } catch (err) {
-      console.error("delete:", err);
       alert(err?.response?.data?.message || "Delete failed");
     }
   }
@@ -192,7 +160,6 @@ export default function AdminCars() {
       await apiClient.put(`/api/v1/admin/cars/${carId}/toggle`);
       setRefreshKey(k => k + 1);
     } catch (err) {
-      console.error("toggle:", err);
       alert(err?.response?.data?.message || "Toggle failed");
     }
   }
@@ -215,7 +182,6 @@ export default function AdminCars() {
       alert(res.data.message || "Car assigned successfully");
       navigate("/admin/rides");
     } catch (err) {
-      console.error("assign car:", err);
       alert(err?.response?.data?.message || "Failed to assign car");
     }
   }
@@ -690,22 +656,17 @@ function AddCarModal({ onClose, mode = "add", car = null }) {
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        console.log(`Uploading image ${i + 1}/${files.length}:`, file.name);
         setUploadProgress({ current: i + 1, total: files.length });
 
         const url = await uploadToCloudinary(file);
         urls.push(url);
-        console.log(`Image ${i + 1} uploaded successfully:`, url);
       }
 
       setForm(prev => ({
         ...prev,
         images: [...(prev.images || []), ...urls],
       }));
-
-      console.log("All images uploaded successfully!");
     } catch (err) {
-      console.error("Upload error:", err);
       alert(`Upload failed: ${err.message || "Check Cloudinary settings"}`);
     } finally {
       setUploading(false);
@@ -755,8 +716,6 @@ function AddCarModal({ onClose, mode = "add", car = null }) {
         payload.pricing.airportPrice = Number(form.airportPrice);
       }
 
-      console.log("Sending payload:", JSON.stringify(payload, null, 2));
-
       if (isEdit) {
         await apiClient.put(`/api/v1/admin/cars/${form.carId}`, payload);
         alert("Car updated successfully!");
@@ -767,8 +726,6 @@ function AddCarModal({ onClose, mode = "add", car = null }) {
 
       onClose();
     } catch (err) {
-      console.error("add car error:", err);
-      console.error("error response:", err?.response?.data);
       alert(err?.response?.data?.message || "Add car failed");
     }
   }
