@@ -7,6 +7,7 @@ import { sendBookingConfirmationEmail } from "../utils/bookingEmailService.js";
 import CorporateRide from "../models/CorporateRides.js";
 import Coupon from "../models/Coupon.js";
 import { createPaymentRecord, updatePaymentStatus } from "../utils/paymentHelper.js";
+import { makeUTCStartTime } from "../utils/dateUtils.js";
 
 export const createOrder = async (req, res) => {
   try {
@@ -80,7 +81,7 @@ export const verifyPayment = async (req, res) => {
     } = req.body;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      console.log("❌ Missing Razorpay response fields");
+      console.log("Missing Razorpay response fields");
       return res.json({
         success: false,
         message: "Missing payment details"
@@ -107,7 +108,10 @@ export const verifyPayment = async (req, res) => {
       return res.json({ success: false, message: "Ride details not found" });
     }
 
-    const startTime = new Date(`${payment.rideDetails.date}T${payment.rideDetails.time}:00`);
+    const startTime = makeUTCStartTime(
+      payment.rideDetails.date,
+      payment.rideDetails.time
+    );
 
     const ride = await Ride.create({
       userId: payment.userId,
@@ -230,11 +234,11 @@ export const razorpayWebhook = async (req, res) => {
       const paymentLinkId = paymentEntity.payment_link_id;
 
       let paymentRecord = null;
-      
+
       if (orderId) {
         paymentRecord = await Payment.findOne({ razorpayOrderId: orderId });
       }
-      
+
       if (!paymentRecord && paymentLinkId) {
         paymentRecord = await Payment.findOne({ razorpayPaymentLinkId: paymentLinkId });
       }
@@ -282,7 +286,7 @@ export const razorpayWebhook = async (req, res) => {
 
       if (!paymentRecord && (notes.purpose === "extra_charge" || notes.type === "extra_charge") && notes.rideId) {
         const referenceType = notes.rideModel === "corporate" ? "CorporateRide" : "Ride";
-        
+
         paymentRecord = await Payment.findOne({
           referenceId: notes.rideId,
           referenceType: referenceType,
@@ -294,15 +298,15 @@ export const razorpayWebhook = async (req, res) => {
       if (paymentRecord) {
         paymentRecord.status = "captured";
         paymentRecord.razorpayPaymentId = paymentId;
-        
+
         if (orderId && !paymentRecord.razorpayOrderId) {
           paymentRecord.razorpayOrderId = orderId;
         }
-        
+
         if (paymentLinkId && !paymentRecord.razorpayPaymentLinkId) {
           paymentRecord.razorpayPaymentLinkId = paymentLinkId;
         }
-        
+
         await paymentRecord.save();
       } else {
         console.log("⚠️Payment record NOT FOUND !");
@@ -389,7 +393,7 @@ export const razorpayWebhook = async (req, res) => {
       const refundAmount = refund.amount / 100;
 
       const paymentRecord = await Payment.findOneAndUpdate(
-        { 
+        {
           razorpayPaymentId: paymentId,
           refundStatus: { $in: ['none', null] }
         },
@@ -411,7 +415,7 @@ export const razorpayWebhook = async (req, res) => {
         const RideModel = paymentRecord.referenceType === "Ride" ? Ride : CorporateRide;
 
         const ride = await RideModel.findOneAndUpdate(
-          { 
+          {
             _id: paymentRecord.referenceId,
             refundStatus: { $in: ['none', 'pending_approval', 'rejected', null] }
           },
@@ -436,7 +440,7 @@ export const razorpayWebhook = async (req, res) => {
       const paymentId = refund.payment_id;
       const refundId = refund.id;
       const refundAmount = refund.amount / 100;
-     
+
       const paymentRecord = await Payment.findOneAndUpdate(
         { razorpayPaymentId: paymentId },
         {
@@ -466,7 +470,7 @@ export const razorpayWebhook = async (req, res) => {
           },
           { new: true }
         );
-        
+
       } else {
         console.log("⚠️ No referenceId or referenceType in payment record");
       }

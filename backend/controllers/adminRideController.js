@@ -6,105 +6,42 @@ import { razorpay } from "../utils/razorpay.js";
 import moment from "moment";
 import Payment from "../models/Payment.js";
 import { createPaymentRecord } from "../utils/paymentHelper.js";
-
-/* -----------------------------------------------------------
-   AUTO UPDATE upcoming → active
------------------------------------------------------------- */
-
-// async function updateStatuses() {
-//   const now = new Date();
-
-//   /* ===========================
-//      NORMAL RIDES
-//   ============================ */
-//   await Ride.updateMany(
-//     {
-//       rideStatus: "upcoming",
-//       startTime: { $lte: now }
-//     },
-//     {
-//       $set: {
-//         rideStatus: "active",
-//         activatedAt: now
-//       }
-//     }
-//   );
-
-//   /* ===========================
-//      CORPORATE RIDES
-//   ============================ */
-//   await CorporateRide.updateMany(
-//     {
-//       rideStatus: "upcoming",
-//       startTime: { $lte: now }
-//     },
-//     {
-//       $set: {
-//         rideStatus: "active",
-//         activatedAt: now
-//       }
-//     }
-//   );
-// }
-
-
-/* -----------------------------------------------------------
-   GET RIDES
------------------------------------------------------------- */
-import { updateRideStatuses } from "../utils/rideStatusUpdater.js";
+import { resolveRideStatus } from "../utils/resolveRideStatus.js";
 
 export const getAdminRides = async (req, res) => {
   try {
-    console.log("🎯 getAdminRides controller called");
-
-    console.log("⏰ Running updateRideStatuses...");
-    await updateRideStatuses();
-    console.log("✅ updateRideStatuses completed");
-
-    console.log("📡 Fetching normal rides...");
     const normalRides = await Ride.find({})
-      .populate("userId", "name email phone role")
-      .lean();
-    console.log("📦 Normal rides found:", normalRides.length);
-    if (normalRides.length > 0) {
-      console.log("📄 Sample normal ride:", normalRides[0]);
-    }
+      .populate("userId", "name email phone role");
 
-    console.log("📡 Fetching corporate rides...");
     const corporateRides = await CorporateRide.find({})
-      .populate("userId", "name email phone role")
-      .lean();
-    console.log("📦 Corporate rides found:", corporateRides.length);
-    if (corporateRides.length > 0) {
-      console.log("📄 Sample corporate ride:", corporateRides[0]);
-    }
+      .populate("userId", "name email phone role");
+
+    const normalize = async (ride, Model) => {
+      const computedStatus = resolveRideStatus(ride);
+
+      if (computedStatus !== ride.rideStatus) {
+        ride.rideStatus = computedStatus;
+        await ride.save(); 
+      }
+
+      return {
+        ...ride.toObject(),
+        displayFare: ride.fare ?? ride.finalFare,
+      };
+    };
 
     const merged = [
-      ...normalRides.map(r => ({
-        ...r,
-        _source: "normal",
-        displayFare: r.fare,
-        displayStatus: r.rideStatus
-      })),
-      ...corporateRides.map(r => ({
-        ...r,
-        _source: "corporate",
-        displayFare: r.finalFare || r.expectedFare,
-        displayStatus: r.rideStatus
-      }))
+      ...(await Promise.all(normalRides.map(r => normalize(r, Ride)))),
+      ...(await Promise.all(corporateRides.map(r => normalize(r, CorporateRide)))),
     ];
 
-    console.log("✅ Merged total rides:", merged.length);
-    console.log("📤 Sending response...");
-
     res.json({ success: true, rides: merged });
-
   } catch (err) {
-    console.error("❌ getAdminRides Error:", err);
-    console.error("Stack:", err.stack);
-    res.status(500).json({ success: false, error: err.message });
+    console.error("getAdminRides error:", err);
+    res.status(500).json({ success: false });
   }
 };
+
 
 
 /* -----------------------------------------------------------
@@ -117,9 +54,6 @@ export const assignCarToRide = async (req, res) => {
     const { rideId } = req.params;
     const { carId } = req.body;
 
-    /* =========================
-       FIND RIDE (NORMAL / CORPORATE)
-    ========================= */
     let ride = await Ride.findById(rideId);
     let RideModel = Ride;
 
@@ -200,10 +134,8 @@ export const markRideCompleted = async (req, res) => {
       });
     }
 
-    // ✅ Mark completed
     ride.rideStatus = "completed";
 
-    // Optional: keep paymentStatus consistent
     if (modelType === "corporate" && ride.status === "paid") {
       ride.paymentStatus = "paid";
     }
@@ -238,7 +170,6 @@ export const getCancelRequests = async (req, res) => {
       refundStatus: "pending_approval",
     }).populate("userId");
 
-    // Tag type for frontend/admin
     const requests = [
       ...normal.map(r => ({ ...r.toObject(), _type: "normal" })),
       ...corporate.map(r => ({ ...r.toObject(), _type: "corporate" })),

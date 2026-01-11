@@ -67,33 +67,26 @@ export default function AdminCars() {
 
   useEffect(() => {
     let intervalId = null;
-    let isActive = true;
 
     const fetchAvailability = async () => {
-      if (!isActive) return;
-
       try {
-
         const res = await apiClient.get("/api/v1/admin/cars/availability");
-
-        if (!isActive) return; 
 
         if (res.data?.success && res.data.availability) {
           const updates = res.data.availability;
 
-          setCars(prev => {
-            const updated = prev.map(car => {
+          setCars(prev =>
+            prev.map(car => {
               const newAvailability = updates[car._id] ?? updates[car.carId];
 
               if (newAvailability !== undefined && newAvailability !== car.availability) {
+                console.log(`Car ${car.name} availability changed: ${car.availability} → ${newAvailability}`);
                 return { ...car, availability: newAvailability };
               }
 
               return car;
-            });
-
-            return [...updated];
-          });
+            })
+          );
         }
       } catch (err) {
         console.error("Availability update error:", err);
@@ -103,11 +96,9 @@ export default function AdminCars() {
     const startPolling = () => {
       if (intervalId) clearInterval(intervalId);
 
-      fetchAvailability(); 
+      fetchAvailability();
 
-      intervalId = setInterval(() => {
-        fetchAvailability();
-      }, 60000);
+      intervalId = setInterval(fetchAvailability, 60000);
     };
 
     const stopPolling = () => {
@@ -132,7 +123,6 @@ export default function AdminCars() {
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      isActive = false;
       stopPolling();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
@@ -148,6 +138,7 @@ export default function AdminCars() {
       const carsWithAvail = res.data.cars || [];
       setCars(carsWithAvail);
     } catch (err) {
+      console.error("fetchCars error:", err);
       setCars([]);
     } finally {
       setLoading(false);

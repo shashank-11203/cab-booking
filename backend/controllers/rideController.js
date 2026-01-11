@@ -3,10 +3,14 @@ import mongoose from "mongoose";
 import Ride from "../models/Ride.js";
 import CorporateRide from "../models/CorporateRides.js";
 import moment from "moment";
+import { makeUTCStartTime } from "../utils/dateUtils.js";
 
 export const createRide = async (req, res) => {
   try {
-    const startTime = new Date(`${payment.rideDetails.date}T${payment.rideDetails.time}:00`);
+    const startTime = makeUTCStartTime(
+      rideDetails.date,
+      rideDetails.time
+    );
 
     const ride = await Ride.create({
       userId: req.body.userId,
@@ -110,7 +114,7 @@ export const updateRide = async (req, res) => {
     }
 
     if (scheduleChanged) {
-      ride.startTime = new Date(`${ride.date}T${ride.time}:00`);
+      ride.startTime = makeUTCStartTime(ride.date, ride.time);
 
       if (ride.rideStatus === "active" && ride.startTime > new Date()) {
         ride.rideStatus = "upcoming";

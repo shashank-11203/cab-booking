@@ -2,12 +2,16 @@ import CorporateRide from "../models/CorporateRides.js";
 import { razorpay } from "../utils/razorpay.js";
 import crypto from "crypto";
 import { createPaymentRecord } from "../utils/paymentHelper.js";
+import { makeUTCStartTime } from "../utils/dateUtils.js";
 
 export const initCorporateRide = async (req, res) => {
   try {
     const { rideDetails } = req.body;
 
-    const startTime = new Date(`${rideDetails.date}T${rideDetails.time}:00`);
+    const startTime = makeUTCStartTime(
+      rideDetails.date,
+      rideDetails.time
+    );
 
     const ride = await CorporateRide.create({
       userId: req.user._id,
@@ -110,7 +114,7 @@ export const generateCorporatePaymentLink = async (req, res) => {
       description: `Corporate Ride Payment - ${ride._id}`,
       callback_url: `${process.env.FRONTEND_URL}/bookings`,
     });
-    
+
     await createPaymentRecord({
       userId: ride.userId._id,
       referenceType: "CorporateRide",
