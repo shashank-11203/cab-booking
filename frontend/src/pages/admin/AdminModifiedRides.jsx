@@ -15,7 +15,7 @@ export default function AdminModifiedRides() {
     const [initialLoaded, setInitialLoaded] = useState(false);
     const [filter, setFilter] = useState("all");
     const [manualRefresh, setManualRefresh] = useState(false);
-    const [isGenerating, setIsGenerating] = useState(false);
+    const [generatingRideId, setGeneratingRideId] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -78,12 +78,13 @@ export default function AdminModifiedRides() {
     }
 
     async function generateExtraPayment(ride) {
-        if (isGenerating) return;
+        if (generatingRideId === ride._id) return;
+
         const amount = prompt("Enter extra charge amount (₹):");
         if (!amount || isNaN(amount)) return alert("Invalid amount");
 
         try {
-            setIsGenerating(true);
+            setGeneratingRideId(ride._id);
             await apiClient.post(`/api/v1/admin/rides/${ride._id}/extra-payment`, {
                 amount: Number(amount)
             });
@@ -94,7 +95,7 @@ export default function AdminModifiedRides() {
             console.error(err);
             alert("Failed to generate payment link");
         } finally {
-            setIsGenerating(false);
+            setGeneratingRideId(null);
         }
     }
 
@@ -267,19 +268,21 @@ export default function AdminModifiedRides() {
                                 {ride.extraChargeStatus !== "paid" && (
                                     <button
                                         onClick={() => generateExtraPayment(ride)}
+                                        disabled={generatingRideId === ride._id}
                                         className={`
     w-full sm:w-auto px-4 py-2 rounded-md font-semibold transition 
     flex items-center gap-2 justify-center 
     text-sm sm:text-base
-    ${isGenerating
+    ${generatingRideId === ride._id
                                                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                                : "bg-yellow-400 [[data-theme=dark]_&]:text-gray-700 hover:bg-yellow-500 cursor-pointer"}
+                                                : "bg-yellow-400 [[data-theme=dark]_&]:text-gray-700 hover:bg-yellow-500"
+                                            }
   `}
-                                        disabled={isGenerating}
                                     >
                                         <IndianRupee size={18} />
-                                        {isGenerating ? "Generating..." : "Generate Payment"}
+                                        {generatingRideId === ride._id ? "Generating..." : "Generate Payment"}
                                     </button>
+
                                 )}
 
                                 {ride.extraPaymentLink && (

@@ -10,7 +10,7 @@ export default function AdminCorporate() {
   const [rideFilter, setRideFilter] = useState("all");
   const [loadingReq, setLoadingReq] = useState(true);
   const [loadingRides, setLoadingRides] = useState(true);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatingRideId, setGeneratingRideId] = useState(null);
   const [manualRefresh, setManualRefresh] = useState(false);
 
   useEffect(() => {
@@ -109,10 +109,10 @@ export default function AdminCorporate() {
   }
 
   async function generateLink(ride) {
-    if (isGenerating || ride.paymentLink) return;
+    if (generatingRideId === ride._id || ride.paymentLink) return;
 
     try {
-      setIsGenerating(true);
+      setGeneratingRideId(ride._id);
 
       if (!ride.finalFare) {
         alert("Enter final fare first");
@@ -142,7 +142,7 @@ export default function AdminCorporate() {
       console.error("generate payment link", err);
       alert("Failed to generate payment link.");
     } finally {
-      setIsGenerating(false);
+      setGeneratingRideId(null);
     }
   }
 
@@ -297,11 +297,9 @@ export default function AdminCorporate() {
           )}
         </div>
 
-        {/* SECTION 2: Corporate Rides */}
         <div>
           <h2 className="text-xl sm:text-2xl font-bold mb-4">Corporate Rides & Payment History</h2>
 
-          {/* Ride Filters */}
           <div className="flex gap-2 mb-4 flex-wrap">
             {[
               { label: "All", value: "all" },
@@ -405,14 +403,14 @@ export default function AdminCorporate() {
                         <button
                           onClick={() => generateLink(ride)}
                           className={`w-full sm:w-auto px-4 py-2 rounded-md font-semibold transition flex items-center gap-2 justify-center text-sm
-                            ${isGenerating
+    ${generatingRideId === ride._id
                               ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                              : "bg-yellow-400 [[data-theme=dark]_&]:text-gray-700 hover:bg-yellow-500 cursor-pointer"
+                              : "bg-yellow-400 [[data-theme=dark]_&]:text-gray-700 hover:bg-yellow-500"
                             }`}
-                          disabled={isGenerating}
+                          disabled={generatingRideId === ride._id}
                         >
                           <IndianRupee size={18} />
-                          {isGenerating ? "Generating..." : "Generate Payment"}
+                           {generatingRideId === ride._id ? "Generating..." : "Generate Payment"}
                         </button>
                       </>
                     )}

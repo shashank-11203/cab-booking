@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import apiClient from "../../utils/apiClient";
 import { useTheme } from "../../context/ThemeContext";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 const placeholderImg =
   "https://res.cloudinary.com/demo/image/upload/w_800,h_500,c_fill,q_auto,f_auto/sample.jpg";
@@ -28,6 +28,7 @@ export default function AdminCars() {
   const [isCarModalOpen, setIsCarModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("add");
   const [selectedCar, setSelectedCar] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -38,6 +39,9 @@ export default function AdminCars() {
   const preferredCar = params.get("preferredCar");
   const rideDetails = state?.rideDetails || null;
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const rideId = searchParams.get("assignRide");
+  const [assigningCarId, setAssigningCarId] = useState(null);
 
   const formatDate = dateStr => {
     const d = new Date(dateStr);
@@ -131,12 +135,25 @@ export default function AdminCars() {
   async function fetchCars() {
     try {
       setLoading(true);
-      const res = await apiClient.get("/api/v1/admin/cars", {
+
+      const carRes = await apiClient.get("/api/v1/admin/cars", {
         params: { category: filter === "all" ? undefined : filter },
       });
 
-      const carsWithAvail = res.data.cars || [];
-      setCars(carsWithAvail);
+      const carsList = carRes.data.cars || [];
+
+      const availRes = await apiClient.get("/api/v1/admin/cars/availability");
+      const availabilityMap = availRes.data?.availability || {};
+
+      const mergedCars = carsList.map(car => ({
+        ...car,
+        availability:
+          availabilityMap[car._id] ??
+          availabilityMap[car.carId] ??
+          null,
+      }));
+
+      setCars(mergedCars);
     } catch (err) {
       console.error("fetchCars error:", err);
       setCars([]);
@@ -144,6 +161,7 @@ export default function AdminCars() {
       setLoading(false);
     }
   }
+
 
   async function handleDelete(carId) {
     if (!window.confirm("Delete this car permanently?")) return;
@@ -164,12 +182,15 @@ export default function AdminCars() {
     }
   }
 
+
   async function handleAssignCar(carId) {
     if (!assignRide) return;
+    if (assigningCarId === carId) return;
 
     if (!window.confirm(`Assign car #${carId} to this ride?`)) return;
 
     try {
+      setAssigningCarId(carId);
       const res = await apiClient.put(`/api/v1/admin/rides/${assignRide}/assign-car`, {
         carId,
       });
@@ -183,6 +204,8 @@ export default function AdminCars() {
       navigate("/admin/rides");
     } catch (err) {
       alert(err?.response?.data?.message || "Failed to assign car");
+    } finally {
+      setAssigningCarId(null);
     }
   }
 
@@ -468,9 +491,15 @@ export default function AdminCars() {
                         {assignRide && (
                           <button
                             onClick={() => handleAssignCar(car.carId)}
-                            className="px-4 py-2 text-sm rounded-lg bg-green-500 hover:bg-green-600 text-white flex items-center gap-2"
+                            disabled={assigningCarId === car.carId}
+                            className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2
+      ${assigningCarId === car.carId
+                                ? "bg-gray-300 cursor-not-allowed"
+                                : "bg-green-500 hover:bg-green-400"
+                              }`}
                           >
-                            <Car size={14} /> Assign
+                            <Car size={14} />
+                            {assigningCarId === car.carId ? "Assigning..." : "Assign"}
                           </button>
                         )}
 
@@ -646,25 +675,23 @@ function AddCarModal({ onClose, mode = "add", car = null }) {
   }
 
   async function handleFileChange(e) {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (form.images.length >= 1) {
+      alert("Only one image is allowed per car.");
+      return;
+    }
 
     try {
       setUploading(true);
-      setUploadProgress({ current: 0, total: files.length });
-      const urls = [];
+      setUploadProgress({ current: 1, total: 1 });
 
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        setUploadProgress({ current: i + 1, total: files.length });
-
-        const url = await uploadToCloudinary(file);
-        urls.push(url);
-      }
+      const url = await uploadToCloudinary(file);
 
       setForm(prev => ({
         ...prev,
-        images: [...(prev.images || []), ...urls],
+        images: [url],
       }));
     } catch (err) {
       alert(`Upload failed: ${err.message || "Check Cloudinary settings"}`);
@@ -673,6 +700,7 @@ function AddCarModal({ onClose, mode = "add", car = null }) {
       setUploadProgress({ current: 0, total: 0 });
     }
   }
+
 
   function removeImage(index) {
     setForm(prev => ({
@@ -683,6 +711,9 @@ function AddCarModal({ onClose, mode = "add", car = null }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
+
+    if (submitting) return;
+
     if (
       !form.carId ||
       !form.name ||
@@ -695,12 +726,14 @@ function AddCarModal({ onClose, mode = "add", car = null }) {
     }
 
     try {
+      setSubmitting(true);
+
       const payload = {
         carId: Number(form.carId),
         name: form.name,
         registrationNumber: form.registrationNumber,
         category: form.category,
-        images: form.images,
+        images: form.images.slice(0, 1),
         pricing: {
           localPrice: Number(form.localPrice),
           outstationPrice: Number(form.outstationPrice),
@@ -708,13 +741,9 @@ function AddCarModal({ onClose, mode = "add", car = null }) {
         },
       };
 
-      if (form.seats) {
-        payload.seats = Number(form.seats);
-      }
-
-      if (form.airportPrice) {
+      if (form.seats) payload.seats = Number(form.seats);
+      if (form.airportPrice)
         payload.pricing.airportPrice = Number(form.airportPrice);
-      }
 
       if (isEdit) {
         await apiClient.put(`/api/v1/admin/cars/${form.carId}`, payload);
@@ -726,9 +755,12 @@ function AddCarModal({ onClose, mode = "add", car = null }) {
 
       onClose();
     } catch (err) {
-      alert(err?.response?.data?.message || "Add car failed");
+      alert(err?.response?.data?.message || "Save car failed");
+    } finally {
+      setSubmitting(false);
     }
   }
+
 
   return (
     <motion.div
@@ -905,7 +937,6 @@ function AddCarModal({ onClose, mode = "add", car = null }) {
               <input
                 type="file"
                 accept="image/*"
-                multiple
                 onChange={handleFileChange}
                 className="hidden"
                 id="car-images"
@@ -956,10 +987,29 @@ function AddCarModal({ onClose, mode = "add", car = null }) {
                         alt={`Car ${i + 1}`}
                         className="w-full h-24 object-cover rounded-lg border border-gray-200 [[data-theme=dark]_&]:border-gray-700"
                       />
-                      <button
+                      {/* <button
                         type="button"
                         onClick={() => removeImage(i)}
                         className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={14} />
+                      </button> */}
+
+                      <button
+                        type="button"
+                        onClick={() => removeImage(i)}
+                        className="
+      absolute top-1 right-1
+      p-1.5 rounded-full
+      bg-red-500 text-white
+      shadow-md
+
+      opacity-100
+      md:opacity-0 md:group-hover:opacity-100
+
+      transition-opacity
+    "
+                        aria-label="Remove image"
                       >
                         <X size={14} />
                       </button>
@@ -985,13 +1035,13 @@ function AddCarModal({ onClose, mode = "add", car = null }) {
             </motion.button>
             <motion.button
               type="submit"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              disabled={uploading}
+              whileHover={{ scale: submitting || uploading ? 1 : 1.02 }}
+              whileTap={{ scale: submitting || uploading ? 1 : 0.98 }}
+              disabled={uploading || submitting}
               className="flex-1 px-6 py-3 rounded-lg font-semibold bg-yellow-400 hover:bg-yellow-500 text-black shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {uploading
-                ? "Uploading..."
+              {submitting
+                ? "Saving..."
                 : isEdit
                   ? "Update Car"
                   : "Add Car"}

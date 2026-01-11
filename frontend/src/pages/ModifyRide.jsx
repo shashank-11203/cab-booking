@@ -26,6 +26,8 @@ const ModifyRide = () => {
     const [showTimes, setShowTimes] = useState(false);
     const timeRef = useRef(null);
 
+    const [saving, setSaving] = useState(false);
+
     const generateTimes = () => {
         const options = [];
         for (let h = 0; h < 24; h++) {
@@ -148,6 +150,8 @@ const ModifyRide = () => {
     }, [rideId]);
 
     const handleSave = async () => {
+        if (saving) return;
+
         if (!pickup || !drop) {
             toast.error("Please select both pickup and drop locations");
             return;
@@ -159,6 +163,8 @@ const ModifyRide = () => {
         }
 
         try {
+            setSaving(true);
+
             const res = await apiClient.put(`/api/v1/rides/update/${rideId}`, {
                 pickup: {
                     name: pickup.name,
@@ -184,6 +190,8 @@ const ModifyRide = () => {
         } catch (err) {
             console.log(err);
             toast.error(err.response?.data?.message || "Could not update ride");
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -375,16 +383,21 @@ const ModifyRide = () => {
 
                 <button
                     onClick={handleSave}
-                    className="
-                        w-full mt-3 sm:mt-4 
-                        py-2.5 sm:py-3 
-                        rounded-xl 
-                        bg-yellow-400 text-black font-semibold
-                        hover:bg-yellow-500 transition cursor-pointer
-                        text-sm sm:text-base
-                    "
+                    disabled={saving}
+                    className={`
+        w-full mt-3 sm:mt-4 
+        py-2.5 sm:py-3 
+        rounded-xl 
+        font-semibold
+        text-sm sm:text-base
+        transition
+        ${saving
+                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            : "bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer"
+                        }
+    `}
                 >
-                    Save Changes
+                    {saving ? "Saving..." : "Save Changes"}
                 </button>
             </motion.div>
         </div>

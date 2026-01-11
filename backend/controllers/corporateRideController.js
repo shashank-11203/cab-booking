@@ -145,7 +145,7 @@ export const generateCorporatePaymentLink = async (req, res) => {
 export const getPendingCorporateRides = async (req, res) => {
   try {
     const rides = await CorporateRide.find({
-      status: { $in: ["pending_negotiation", "payment_pending", "paid"] }
+      paymentStatus: { $in: ["unpaid", "payment_pending", "paid"] }
     })
       .populate("userId", "name phone email")
       .sort({ updatedAt: -1 });
