@@ -26,16 +26,10 @@ export default function AdminRides() {
   const [allRides, setAllRides] = useState([]);
 
   const filterRef = useRef(filter);
-  const getRideDisplayStatusRef = useRef(getRideDisplayStatus);
 
-  // Update refs when they change
   useEffect(() => {
     filterRef.current = filter;
   }, [filter]);
-
-  useEffect(() => {
-    getRideDisplayStatusRef.current = getRideDisplayStatus;
-  }, [getRideDisplayStatus]);
 
   useEffect(() => {
     fetchRides(true);
@@ -54,7 +48,6 @@ export default function AdminRides() {
         setAllRides(all);
 
         const currentFilter = filterRef.current;
-        const getStatus = getRideDisplayStatusRef.current;
 
         let filtered = [];
 
@@ -62,12 +55,12 @@ export default function AdminRides() {
           filtered = all;
         } else if (currentFilter === "active") {
           filtered = all.filter(ride => {
-            const displayStatus = getStatus(ride);
+            const displayStatus = getRideDisplayStatus(ride);
             return displayStatus === "active";
           });
         } else if (currentFilter === "upcoming") {
           filtered = all.filter(ride => {
-            const displayStatus = getStatus(ride);
+            const displayStatus = getRideDisplayStatus(ride);
             return displayStatus === "upcoming";
           });
         } else {
@@ -76,7 +69,6 @@ export default function AdminRides() {
 
         setRides([...filtered]);
       } catch (err) {
-        console.error("Admin rides polling error:", err);
       } finally {
         if (showLoader) setLoading(false);
       }
@@ -86,7 +78,6 @@ export default function AdminRides() {
       if (intervalId) {
         return;
       }
-
       fetchAndFilter(false);
       intervalId = setInterval(() => {
         fetchAndFilter(false);
@@ -118,7 +109,7 @@ export default function AdminRides() {
       stopPolling();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
+  }, [getRideDisplayStatus]);
 
   async function fetchRides(showLoading = true) {
     try {
