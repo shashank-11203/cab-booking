@@ -110,8 +110,7 @@ export const generateCorporatePaymentLink = async (req, res) => {
       description: `Corporate Ride Payment - ${ride._id}`,
       callback_url: `${process.env.FRONTEND_URL}/bookings`,
     });
-
-    // Create payment record for corporate ride
+    
     await createPaymentRecord({
       userId: ride.userId._id,
       referenceType: "CorporateRide",

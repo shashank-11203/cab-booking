@@ -55,15 +55,29 @@ import { updateRideStatuses } from "../utils/rideStatusUpdater.js";
 
 export const getAdminRides = async (req, res) => {
   try {
-    await updateRideStatuses();
+    console.log("🎯 getAdminRides controller called");
 
+    console.log("⏰ Running updateRideStatuses...");
+    await updateRideStatuses();
+    console.log("✅ updateRideStatuses completed");
+
+    console.log("📡 Fetching normal rides...");
     const normalRides = await Ride.find({})
       .populate("userId", "name email phone role")
       .lean();
+    console.log("📦 Normal rides found:", normalRides.length);
+    if (normalRides.length > 0) {
+      console.log("📄 Sample normal ride:", normalRides[0]);
+    }
 
+    console.log("📡 Fetching corporate rides...");
     const corporateRides = await CorporateRide.find({})
       .populate("userId", "name email phone role")
       .lean();
+    console.log("📦 Corporate rides found:", corporateRides.length);
+    if (corporateRides.length > 0) {
+      console.log("📄 Sample corporate ride:", corporateRides[0]);
+    }
 
     const merged = [
       ...normalRides.map(r => ({
@@ -80,11 +94,15 @@ export const getAdminRides = async (req, res) => {
       }))
     ];
 
+    console.log("✅ Merged total rides:", merged.length);
+    console.log("📤 Sending response...");
+
     res.json({ success: true, rides: merged });
 
   } catch (err) {
-    console.error("getAdminRides Error", err);
-    res.status(500).json({ success: false });
+    console.error("❌ getAdminRides Error:", err);
+    console.error("Stack:", err.stack);
+    res.status(500).json({ success: false, error: err.message });
   }
 };
 

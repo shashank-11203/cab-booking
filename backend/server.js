@@ -129,10 +129,9 @@ import mongoose from "mongoose";
 const app = express();
 await mongoose.connect(process.env.MONGO_URI);
 console.log('MongoDB Connected');
-// ✅ Trust proxy (MUST be first)
+
 app.set('trust proxy', 1);
 
-// ✅ Health check (BEFORE rate limiting and DB connection)
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
@@ -140,9 +139,6 @@ app.get('/health', (req, res) => {
     env: process.env.NODE_ENV
   });
 });
-
-// Connect DB
-// connectDB();
 
 // Security & Performance
 app.use(helmet());
