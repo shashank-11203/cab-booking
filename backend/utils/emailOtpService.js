@@ -33,7 +33,7 @@ export const sendEmailOtp = async (email, otp) => {
             <tr>
               <td style="background:#FFD84C; padding:25px 30px; text-align:center;">
                 <h1 style="margin:0; font-size:28px; color:#1F2937; font-weight:700;">
-                  Door Darshan Travels
+                  Door Darshan Cabs
                 </h1>
                 <p style="margin:8px 0 0; color:#1F2937; font-size:14px;">
                   Secure Login Verification
@@ -51,7 +51,7 @@ export const sendEmailOtp = async (email, otp) => {
 
                 <p style="font-size:16px; line-height:1.6; margin:0 0 25px;">
                   Use the OTP below to verify your login request to 
-                  <strong>Door Darshan Travels</strong>.  
+                  <strong>Door Darshan Cabs</strong>.  
                   This OTP is valid for only <strong>5 minutes</strong>.
                 </p>
 
@@ -83,7 +83,7 @@ export const sendEmailOtp = async (email, otp) => {
             <tr>
               <td style="background:#1F2937; padding:20px; text-align:center;">
                 <p style="margin:0; color:#FFD84C; font-size:14px;">
-                  © ${new Date().getFullYear()} Door Darshan Travels.   
+                  © ${new Date().getFullYear()} Door Darshan Cabs.   
                   All Rights Reserved.
                 </p>
               </td>

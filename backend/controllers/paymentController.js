@@ -188,7 +188,7 @@ export const verifyPayment = async (req, res) => {
           time: savedRide.time,
           carName: savedRide.carName,
           distanceKm: savedRide.distanceKm,
-          fare: savedRide.fare,
+          finalFare: savedRide.finalFare,
         });
 
       } catch (err) {
