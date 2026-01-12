@@ -77,7 +77,7 @@ export default function WhyChooseUs() {
                     className="inline-block px-5 py-2 rounded-full bg-yellow-400/20 [[data-theme=dark]_&]:bg-yellow-400/10 border border-yellow-400 mb-6"
                 >
                     <span className="text-yellow-600 [[data-theme=dark]_&]:text-yellow-400 font-bold text-sm sm:text-base">
-                        ⭐ Why Choose Us
+                        Why Choose Us
                     </span>
                 </motion.div>
 

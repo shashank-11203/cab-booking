@@ -68,7 +68,48 @@ const FleetShowcase = () => {
 
   return (
     <section className="relative py-16 sm:py-20 md:py-28 px-4 sm:px-6 overflow-hidden bg-yellow-50 [[data-theme=dark]_&]:bg-gray-900">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `linear-gradient(rgba(255, 216, 76, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 216, 76, 0.1) 1px, transparent 1px)`,
+          backgroundSize: '50px 50px'
+        }} />
+      </div>
       {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        viewport={{ once: true, margin: "-100px" }}
+        className="text-center mb-12 sm:mb-16 md:mb-20 relative z-10"
+      >
+        <motion.div
+          initial={{ scale: 0, rotate: -10 }}
+          whileInView={{ scale: 1, rotate: 0 }}
+          transition={{ duration: 0.5, delay: 0.2, type: "spring", stiffness: 200 }}
+          viewport={{ once: true }}
+          className="inline-block px-5 py-2 rounded-full bg-yellow-400/20 [[data-theme=dark]_&]:bg-yellow-400/10 border border-yellow-400 mb-6"
+        >
+          <span className="text-yellow-600 [[data-theme=dark]_&]:text-yellow-400 font-bold text-sm sm:text-base">
+            Our Premium Fleet
+          </span>
+        </motion.div>
+
+        <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 [[data-theme=dark]_&]:text-white mb-4">
+          Choose Your
+          <motion.span
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            viewport={{ once: true }}
+            className="block text-yellow-500 [[data-theme=dark]_&]:text-yellow-400"
+          >
+            Perfect Ride
+          </motion.span>
+        </h2>
+        <p className="text-gray-600 [[data-theme=dark]_&]:text-gray-300 text-base sm:text-lg max-w-2xl mx-auto">
+          Premium travel solutions designed for your comfort and convenience
+        </p>
+      </motion.div>
       <div className="relative z-10 max-w-7xl mx-auto space-y-12 sm:space-y-16 md:space-y-20 lg:space-y-28">
         {fleetData.map((vehicle, index) => (
           <FleetCard
