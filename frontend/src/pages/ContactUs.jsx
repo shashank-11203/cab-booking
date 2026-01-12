@@ -126,12 +126,12 @@ export default function ContactUs() {
                                     Call Us
                                 </h3>
                                 <a
-                                    href="tel:+919876543210"
+                                    href="tel:+919825427572"
                                     className="text-sm sm:text-base text-yellow-600 
                                               [[data-theme=dark]_&]:text-yellow-400 
                                               font-semibold hover:underline"
                                 >
-                                    +91 98765 43210
+                                    +91 98254 27572
                                 </a>
                             </div>
                         </div>
@@ -151,12 +151,12 @@ export default function ContactUs() {
                                     Email Us
                                 </h3>
                                 <Link
-                                    to="mailto:support@doordarshantravels.com"
+                                    to="mailto:doordarshancabs@gmail.com"
                                     className="text-sm sm:text-base text-yellow-600 
                                               [[data-theme=dark]_&]:text-yellow-400 
                                               font-semibold hover:underline break-all"
                                 >
-                                    doordarshantcabs@gmail.com
+                                    doordarshancabs@gmail.com
                                 </Link>
                             </div>
                         </div>

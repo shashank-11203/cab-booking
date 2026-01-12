@@ -81,7 +81,7 @@ export default function Footer() {
             Madhapar, Bhuj - Kutch
           </p>
 
-          <p className="mt-2 sm:mt-3 text-xs sm:text-sm">📞 +91 98765 43210</p>
+          <p className="mt-2 sm:mt-3 text-xs sm:text-sm">📞 +91 98254 27572</p>
 
           <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm break-words">📧 doordarshancabs@gmail.com</p>
         </div>

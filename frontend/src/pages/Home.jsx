@@ -8,6 +8,8 @@ import WhyChooseWavy from "../components/WhyChooseWavy";
 import CorporateBanner from "../components/CorporateBooking";
 import CorporateFormPopup from "../components/CorporatePopupForm";
 import ServiceCategories from "../components/ServiceCategories";
+import FleetShowcase from "../components/FleetShowcase";
+import CustomerReviews from "../components/CustomerReviews";
 
 const Home = () => {
   const { theme } = useTheme();
@@ -47,7 +49,7 @@ const Home = () => {
     const handleClick = (e) => {
       const target = e.target.closest('a');
       if (!target) return;
-      
+
       const href = target.getAttribute('href');
       if (href && href.startsWith('/#')) {
         e.preventDefault();
@@ -119,6 +121,10 @@ const Home = () => {
         <CorporateBanner onOpenForm={() => setShowForm(true)} />
         <CorporateFormPopup open={showForm} onClose={() => setShowForm(false)} />
       </div>
+
+      <FleetShowcase />
+
+      <CustomerReviews />
 
       <ServiceCategories />
     </div>
