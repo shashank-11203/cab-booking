@@ -176,8 +176,9 @@ export const logoutController = asyncHandler(async (req, res) => {
 
   res.cookie("token", "", {
     httpOnly: true,
-    expires: new Date(0),
+    secure: isProduction,
     sameSite: isProduction ? "none" : "lax",
+    expires: new Date(0),
     path: "/",
   });
 

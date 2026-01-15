@@ -18,7 +18,7 @@ export const verifyEmailOtp = async ({ email, otp }) => {
 
 export const getMe = async () => apiClient.get("/api/v1/auth/me");
 
-export const updateProfileApi = async (data) => 
+export const updateProfileApi = async (data) =>
   apiClient.put("/api/v1/auth/update-profile", data);
 
 export const logoutUser = async () => apiClient.post("/api/v1/auth/logout");
