@@ -223,7 +223,6 @@ export default function AdminCorporate() {
           ) : (
             <div className="space-y-3">
               {filteredRequests.map(req => {
-                const isPaid = ride.paymentStatus === "paid";
                 return (
 
                   <motion.div
