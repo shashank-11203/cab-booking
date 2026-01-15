@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Login from "./pages/Login";
@@ -27,10 +28,26 @@ import CorporatePaymentVerify from "./pages/CorporatePaymentVerify";
 import AdminModifiedRides from "./pages/admin/AdminModifiedRides";
 import AdminCoupnGenerate from "./pages/admin/AdminCouponGenerate";
 import ProtectedRoutes from "./routes/ProtectedRoutes";
+import CarLoader from "./components/CarLoader";
 
 function App() {
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 1200);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <div className="min-h-screen font-sans bg-white dark:bg-[#1E1E1E] transition-colors duration-500">
+
+      {loading && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white/80 [[data-theme=dark]_&]:bg-gray-900/80 backdrop-blur-md">
+          <CarLoader />
+        </div>
+      )
+      }
 
       <Router>
         <ToastContainer position="top-right" autoClose={2500} />
@@ -82,7 +99,7 @@ function App() {
         <Footer />
         <WhatsAppButton />
       </Router>
-    </div>
+    </div >
   );
 }
 

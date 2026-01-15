@@ -17,6 +17,7 @@
     "firebase": "^12.5.0",
     "framer-motion": "^12.23.24",
     "india-pincode-lookup": "^1.0.3",
+    "lottie-react": "^2.4.1",
     "lucide-react": "^0.553.0",
     "razorpay": "^2.9.6",
     "react": "^19.1.1",

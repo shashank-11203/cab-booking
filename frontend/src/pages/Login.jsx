@@ -226,7 +226,6 @@ const Login = ({ role = "user" }) => {
                          bg-transparent focus:ring-2 focus:ring-yellow-400 outline-none 
                          mb-3 sm:mb-4"
             />
-
             <button
               onClick={handleVerifyOtp}
               disabled={verifying || resending}

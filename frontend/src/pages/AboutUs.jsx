@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { motion } from "framer-motion";
 import { Car, ShieldCheck, Clock, Globe2, HeartHandshake } from "lucide-react";
 
 export default function AboutUs() {
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }, []);
+
     return (
         <div
             className="
@@ -29,7 +33,7 @@ export default function AboutUs() {
                                text-gray-700 [[data-theme=dark]_&]:text-gray-300 
                                leading-relaxed px-4"
                 >
-                    DoorDarshan Travels was built on a simple belief 
+                    DoorDarshan Travels was built on a simple belief
                     <span className="font-semibold text-yellow-600 [[data-theme=dark]_&]:text-yellow-400 ml-2 block sm:inline">
                         travel should feel effortless, premium, and trustworthy.
                     </span>

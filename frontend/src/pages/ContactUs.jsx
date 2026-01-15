@@ -1,10 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { motion } from "framer-motion";
 import { Phone, Mail, MapPin, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function ContactUs() {
+
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }, []);
+
     return (
         <div
             className="
@@ -68,7 +73,7 @@ export default function ContactUs() {
                             mt-4 sm:mt-6
                         "
                     >
-                        <MessageCircle size={20} className="sm:w-[22px] sm:h-[22px]" /> 
+                        <MessageCircle size={20} className="sm:w-[22px] sm:h-[22px]" />
                         Chat on WhatsApp
                     </a>
 

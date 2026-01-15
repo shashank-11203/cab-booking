@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import { openGoogleMaps } from "../utils/track";
+import CarLoader from "../components/CarLoader";
 
 const Bookings = () => {
   const { user } = useAuth();
@@ -15,6 +16,13 @@ const Bookings = () => {
   const [payingId, setPayingId] = useState(null);
 
   const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 1200);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -213,6 +221,13 @@ const Bookings = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 [[data-theme=dark]_&]:from-gray-950 [[data-theme=dark]_&]:via-gray-900 [[data-theme=dark]_&]:to-gray-950 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-24 py-6 sm:py-8 md:py-10 lg:py-12">
+
+      {loading && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white/80 [[data-theme=dark]_&]:bg-gray-900/80 backdrop-blur-md">
+          <CarLoader />
+        </div>
+      )
+      }
 
       {/* Header Section */}
       <motion.div
@@ -432,8 +447,8 @@ const Bookings = () => {
                             target="_blank"
                             onClick={() => setPayingId(ride._id)}
                             className={`block w-full text-center px-4 py-3 rounded-xl text-sm sm:text-base font-bold transition-all ${payingId === ride._id
-                                ? "bg-gray-300 [[data-theme=dark]_&]:bg-gray-600 text-gray-600 [[data-theme=dark]_&]:text-gray-400 cursor-not-allowed"
-                                : "bg-gradient-to-r from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 [[data-theme=dark]_&]:from-orange-500 [[data-theme=dark]_&]:to-red-500 text-white shadow-md hover:shadow-lg"
+                              ? "bg-gray-300 [[data-theme=dark]_&]:bg-gray-600 text-gray-600 [[data-theme=dark]_&]:text-gray-400 cursor-not-allowed"
+                              : "bg-gradient-to-r from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 [[data-theme=dark]_&]:from-orange-500 [[data-theme=dark]_&]:to-red-500 text-white shadow-md hover:shadow-lg"
                               }`}
                             style={{ pointerEvents: payingId === ride._id ? "none" : "auto" }}
                           >

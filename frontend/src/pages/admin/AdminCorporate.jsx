@@ -224,7 +224,6 @@ export default function AdminCorporate() {
             <div className="space-y-3">
               {filteredRequests.map(req => {
                 return (
-
                   <motion.div
                     key={req._id}
                     initial={{ opacity: 0, y: 20 }}
