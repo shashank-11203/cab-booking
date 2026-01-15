@@ -146,7 +146,7 @@ const Login = ({ role = "user" }) => {
     <div
       className="
         flex items-center justify-center min-h-screen 
-        bg-yellow-50 text-gray-900
+        bg-yellow-50
         [[data-theme=dark]_&]:bg-gray-900 
         [[data-theme=dark]_&]:text-gray-100 
         transition-colors duration-500
@@ -161,7 +161,7 @@ const Login = ({ role = "user" }) => {
         className="w-full max-w-md 
                    p-6 sm:p-8 md:p-10
                    rounded-2xl shadow-lg border
-                   bg-white/70 dark:bg-gray-800/70 backdrop-blur-md"
+                   bg-gray-800/70 backdrop-blur-md"
       >
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center 
                        mb-4 sm:mb-6 text-yellow-400">
@@ -187,7 +187,7 @@ const Login = ({ role = "user" }) => {
               className="text-white w-full 
                          p-2.5 sm:p-3 
                          text-sm sm:text-base
-                         rounded-lg border border-gray-300 dark:border-gray-700 
+                         rounded-lg border border-gray-300 
                          bg-transparent focus:ring-2 focus:ring-yellow-400 outline-none 
                          mb-3 sm:mb-4"
             />
@@ -222,7 +222,7 @@ const Login = ({ role = "user" }) => {
               className="text-white w-full 
                          p-2.5 sm:p-3 
                          text-sm sm:text-base
-                         rounded-lg border border-gray-300 dark:border-gray-700 
+                         rounded-lg border border-gray-300 [[data-theme=dark]_&]:border-gray-700 
                          bg-transparent focus:ring-2 focus:ring-yellow-400 outline-none 
                          mb-3 sm:mb-4"
             />
@@ -249,9 +249,7 @@ const Login = ({ role = "user" }) => {
                   setStep(1);
                   setOtp("");
                 }}
-                className="cursor-pointer text-gray-600 dark:text-gray-300 
-                           hover:text-yellow-400 transition-colors
-                           text-center sm:text-left"
+                className="cursor-pointer text-gray-300 hover:text-yellow-400 transition-colors text-center sm:text-left"
               >
                 Change Email
               </button>
@@ -259,7 +257,7 @@ const Login = ({ role = "user" }) => {
               <button
                 disabled={timer > 0 || verifying}
                 onClick={handleResendOtp}
-                className="cursor-pointer text-gray-600 dark:text-gray-300 
+                className="cursor-pointer text-gray-300
                            hover:text-yellow-400 
                            disabled:opacity-50 disabled:cursor-not-allowed
                            transition-colors
