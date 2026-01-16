@@ -94,7 +94,7 @@ app.use(sanitizeRequest);
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 350,
+    max: 500,
     skip: (req) => req.path === '/health',
   })
 );

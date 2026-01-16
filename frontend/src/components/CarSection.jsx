@@ -172,7 +172,7 @@ const CarsSection = ({ tripData, onBookCar }) => {
 
                     <p className="mt-4 sm:mt-6 text-lg sm:text-xl md:text-2xl font-bold 
                                   text-yellow-600 [[data-theme=dark]_&]:text-yellow-400">
-                        📞 Contact Support: 99999 99999
+                        📞 Contact Support: 98254 27572
                     </p>
                 </div>
             )}
