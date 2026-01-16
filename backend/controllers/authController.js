@@ -11,12 +11,24 @@ export const sendEmailOtpController = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: "Invalid email" });
   }
 
-  const isValidDomain = await emailHasMX(email);
+  // const isValidDomain = await emailHasMX(email);
+  // if (!isValidDomain) {
+  //   return res.status(400).json({
+  //     success: false,
+  //     message: "Email domain cannot receive messages",
+  //   });
+  // }
+
+  let isValidDomain = true;
+
+  try {
+    isValidDomain = await emailHasMX(email);
+  } catch (err) {
+    console.warn("MX lookup failed, allowing OTP:", err.message);
+  }
+
   if (!isValidDomain) {
-    return res.status(400).json({
-      success: false,
-      message: "Email domain cannot receive messages",
-    });
+    console.warn("MX record missing, allowing OTP anyway");
   }
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -39,11 +51,13 @@ export const sendEmailOtpController = asyncHandler(async (req, res) => {
     user.otpExpiry = otpExpiry;
 
     if (!user.isVerified) {
-      user.unverifiedCreatedAt = new Date(); 
+      user.unverifiedCreatedAt = new Date();
     }
 
     await user.save();
   }
+
+  console.log("Sending OTP email to:", email);
 
   await sendEmailOtp(email, otp);
 
